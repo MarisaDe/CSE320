@@ -20,9 +20,11 @@ int cat(FILE* f, void* res, char* filename) {
 
 int main(int argc, char** argv) {
 	int test = 0;
-	test = validateargs(argc, argv);
-    printf("%d\n", test); //test return value
-    //int files = 0;
-    //files = nfiles("../..");
+	//test = validateargs(argc, argv);
+    //printf("%d\n", test); //test return value
+    int files = 0;
+    files = nfiles(argv[1]); //tests the directory based on input
+    printf("%i\n", files);   //tests the files counted from nfiles
+
     return EXIT_SUCCESS;  
 }
