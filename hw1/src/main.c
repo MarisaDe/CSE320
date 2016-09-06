@@ -1,4 +1,4 @@
-#include "map_reduce.h"
+#include "../include/map_reduce.h"
 
 //Space to store the results for analysis map
 struct Analysis analysis_space[NFILES];
@@ -19,6 +19,8 @@ int cat(FILE* f, void* res, char* filename) {
 }
 
 int main(int argc, char** argv) {
-    printf("Welcome to CSE 320!\n");
+	int test = 0;
+	test = validateargs(argc, argv);
+    printf("%d\n", test); //test return value
     return EXIT_SUCCESS;
 }

@@ -26,6 +26,16 @@ typedef struct Stats {
                        //(don't print for final result)
 } Stats;
 
+
+/**
+ * Helper function for validateargs.
+ * Prints the help menu.    
+ */
+
+void printhelp();
+
+
+
 /**
  * Validates the command line arguments passed in by the user.
  * @param  argc The number of arguments.
@@ -36,7 +46,9 @@ typedef struct Stats {
  *              has been selected, validateargs returns 3 if analysis
  *              is chosen and 4 if stats is chosen.
  */
+
 int validateargs(int argc, char** argv);
+
 
 /**
  * Counts the number of files in a directory EXCLUDING . and ..
