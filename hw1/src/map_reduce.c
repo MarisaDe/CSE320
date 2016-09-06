@@ -9,10 +9,9 @@
 
 //Prints the help menu
 void printhelp(){
-
-printf("Usage:  ./mapreduce [h|v] FUNC DIR\n");
-printf("\t%.100s\n\t\t%.100s\n\t\t%.100s\n\t%.100s\n\t", "FUNC    Which operation you would like to run on the data:", "ana - Analysis of various text files in a directory.","stats - Calculates stats on files which contain only numbers.", "DIR     The directory in which the files are located.");
-printf("%.100s\n\t%.100s\n\t%.100s\n\t", "Options:", "-h      Prints this help menu.","-v      Prints the map function’s results, stating the file it’s from.");
+	printf("Usage:  ./mapreduce [h|v] FUNC DIR\n");
+	printf("\t%.100s\n\t\t%.100s\n\t\t%.100s\n\t%.100s\n\t", "FUNC    Which operation you would like to run on the data:", "ana - Analysis of various text files in a directory.","stats - Calculates stats on files which contain only numbers.", "DIR     The directory in which the files are located.");
+	printf("%.100s\n\t%.100s\n\t%.100s\n\t", "Options:", "-h      Prints this help menu.","-v      Prints the map function’s results, stating the file it’s from.");
 }
 
 /**
@@ -29,39 +28,90 @@ printf("%.100s\n\t%.100s\n\t%.100s\n\t", "Options:", "-h      Prints this help m
 int validateargs(int argc, char** argv){
 
 // If no args are given (argc = 0)
-if(argc == 0)
+if(argc == 0 || argc == 1)
 {
 	printhelp();
 	return EXIT_FAILURE*-1; //return -1
 }
 
-//check for -h
-else if(strcmp(argv[1], "-h") == 0){
-	printhelp();
-	return EXIT_SUCCESS; //return 0
-}
+//index 0 MUST be ./mapreduce
+else if(strcmp(argv[0], "./mapreduce") == 0) {
 
-//check for just ana
-else if(strcmp(argv[1], "ana") == 0) return 1; 
-
-
-//check for just stats
-else if(strcmp(argv[1], "stats") == 0) return 2; 
-
-
-//check for -v
-else if(strcmp(argv[1], "-v") == 0){
-
-	if(strcmp(argv[2], "ana") == 0) return 3;			//-v ana returns 3
-	else if(strcmp(argv[2], "stats") == 0) return 4;    //-v stats returns 4
-	else{ 
+	//check for -h
+	if(strcmp(argv[1], "-h") == 0){
 		printhelp();
-		return EXIT_FAILURE*-1;
+		return EXIT_SUCCESS; //return 0
 	}
+
+	//for these we must check if the DIR is valid.
+	//first, check to see if a DIR arg was passed.
+	//DIR can only be in argv index 2 if -v is not used.
+	else if(argc == 3){
+
+		//check to see if DIR is valid before checking FUNC
+		DIR* dir = opendir(argv[2]);   //assume input DIR is in index 2.
+		
+		//if DIR is valid, close it and continue checking.
+		if(dir)
+		{
+			closedir(dir);
+
+			//check for just ana
+			if(strcmp(argv[1], "ana") == 0) return 1; 
+
+			//check for just stats
+			else if(strcmp(argv[1], "stats") == 0) return 2;
+
+			//if the FUNC is wrong, print help and return fail.
+			else{
+				printhelp();
+				return EXIT_FAILURE*-1; //return -1
+			}	 
+		}
+
+		//else if DIR is invalid, print help and return failure.
+		else{
+			printhelp();
+			return EXIT_FAILURE*-1; //return -1
+		}
+	}
+
+	//DIR can only be in argv index 3 if -v IS used.	
+	else if(argc == 4){	
+
+		//-v must be in index 1 in this case!
+		if(strcmp(argv[1], "-v") == 0){
+			//check to see if DIR is valid before checking FUNC
+			DIR* dir2 = opendir(argv[3]);   //assume input DIR is in index 3.
+		
+			//if DIR is valid, close it and continue checking.
+			if(dir2)
+			{
+				closedir(dir2);
+				if(strcmp(argv[2], "ana" ) == 0) return 3;	//-v ana returns 3
+				else if(strcmp(argv[2], "stats") == 0) return 4; //-v stats returns 4
+				//if the FUNC is wrong, print help and return failure.
+				else{ 
+				printhelp();
+				return EXIT_FAILURE*-1;
+				}
+			}
+			//DIR is invalid. Print help menu and return failure.
+			else{
+				printhelp();
+				return EXIT_FAILURE*-1; //return -1
+			}	
+		}	
 	
+	}
+	else{
+		printhelp();
+		return EXIT_FAILURE*-1; //return -1
+	}
 }
+//If it doesn't start with ./mapreduce it fails.
 else{
 	printhelp();
 	return EXIT_FAILURE*-1; //return -1
-}
+	}
 }
