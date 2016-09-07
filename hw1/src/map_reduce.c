@@ -3,6 +3,7 @@
 #include "../include/map_reduce.h"
 #include <sys/types.h>
 #include <dirent.h>
+#include <string.h>
 
 //Implement map_reduce.h functions here.
 
@@ -162,3 +163,70 @@ int nfiles(char* dir){
 	}
 
 }
+
+/**
+* The map function goes through each file in a directory, performs some action on
+* the file and then stores the result.
+*
+* @param  dir       The directory that was specified by the user.
+* @param  results   The space where map can store the result for each file.
+* @param  size      The size of struct containing result data for each file.
+* @param  act       The action (function map will call) that map will perform on
+*					each file. Its argument f is the file stream for the specific
+*					file. act assumes the filestream is valid, hence, map should
+*					make sure of it. Its argument res is the space for it to store
+*					the result for that particular file. Its argument fn is a
+*					string describing the filename. On failure returns -1, on
+*					sucess returns value specified in description for the act
+*					function.
+*@return 			The map function returns -1 on failure, sum of act results on 
+*					success.
+*/
+
+int map(char* dir, void* results, size_t size, int (*act)(FILE* f, void* res, char* fn)){
+
+int numfiles = 0;	//initializes number of files
+numfiles = nfiles(dir); //checks to see how many files are in the dir
+printf("%d\n", numfiles);
+//continue if there is at least 1 file to map.
+if(numfiles > 0)
+{
+	size_t length = 0;
+	DIR *directory;			  //creates a directory pointer
+	char filepath[100];
+	directory = opendir(dir); //open the directory.
+	struct dirent* direntry = readdir(directory);
+
+	//Step 1: for each file in the directory:
+	while(direntry != NULL)
+	{	
+		FILE * fp;                //creates a file pointer
+		strcpy(filepath, dir);	  //concatenates the path and the file
+
+		if (strcmp(direntry->d_name, ".") != 0 && strcmp(direntry->d_name, "..") != 0 )
+		{	
+			strcat(filepath, direntry->d_name); //Step 2: get full path of file
+			length = strlen(filepath);			//store length of string
+
+			printf("%s\n",filepath);
+
+			fp = fopen(filepath, "r"); 			//Step 3: open file
+
+			//Step 4: perform some action and store result.
+		
+			fclose(fp);							//Step 5: close file
+			
+		}
+		direntry = readdir(directory); //read the next file in the path
+	}
+
+	closedir(directory); //close the directory stream
+	return 1;
+
+}
+else{
+	return 0;
+}
+}
+
+
