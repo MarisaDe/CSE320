@@ -203,6 +203,12 @@ if(numfiles > 0)
 		FILE * fp;                //creates a file pointer
 		strcpy(filepath, dir);	  //concatenates the path and the file
 
+		if(dir[strlen(dir)-1] != '/') //if dir doesn't have / at the end
+		{
+			strcat(filepath, "/");//add the / for the whole path/.
+		}
+
+
 		if (strcmp(direntry->d_name, ".") != 0 && strcmp(direntry->d_name, "..") != 0 )
 		{	
 			strcat(filepath, direntry->d_name); //Step 2: get full path of file
