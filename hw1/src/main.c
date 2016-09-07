@@ -26,14 +26,10 @@ int main(int argc, char** argv) {
     //files = nfiles(argv[1]); //tests the directory based on input
     //printf("%i\n", files);   //tests the files counted from nfiles
     int mapp = 0;
-    int (*act)(FILE*, void*, char*);
-    act = cat;
-    void* res;
-    FILE* f;
-    size_t size = 100;
-    char* fn = "map_reduce.c";
-    mapp = map(argv[1],analysis_space,size,act);
-
-
+    int (*act)(FILE*, void*, char*);    //create a function pointer
+    act = cat;    //set the pointer to point at the cat function
+    size_t size = 100;  //test size      
+    mapp = map(argv[1],analysis_space,size,act); //test map function
+    printf("%i\n",mapp);
     return EXIT_SUCCESS;  
 }

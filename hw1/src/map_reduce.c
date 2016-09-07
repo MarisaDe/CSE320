@@ -186,8 +186,9 @@ int nfiles(char* dir){
 int map(char* dir, void* results, size_t size, int (*act)(FILE* f, void* res, char* fn)){
 
 int numfiles = 0;	//initializes number of files
+int result = 0;		//keeps track of the return value of *act
+int sum = 0;        //will coun all the results of every *act call.
 numfiles = nfiles(dir); //checks to see how many files are in the dir
-printf("%d\n", numfiles);
 //continue if there is at least 1 file to map.
 if(numfiles > 0)
 {
@@ -195,43 +196,53 @@ if(numfiles > 0)
 	DIR *directory;			  //creates a directory pointer
 	char filepath[100];
 	directory = opendir(dir); //open the directory.
-	struct dirent* direntry = readdir(directory);
 
-	//Step 1: for each file in the directory:
-	while(direntry != NULL)
-	{	
-		FILE * fp;                //creates a file pointer
-		strcpy(filepath, dir);	  //concatenates the path and the file
+	if(directory) //if directory is even valid
+	{
+		struct dirent* direntry = readdir(directory);
 
-		if(dir[strlen(dir)-1] != '/') //if dir doesn't have / at the end
-		{
-			strcat(filepath, "/");//add the / for the whole path/.
-		}
-
-
-		if (strcmp(direntry->d_name, ".") != 0 && strcmp(direntry->d_name, "..") != 0 )
+		//Step 1: for each file in the directory:
+		while(direntry != NULL)
 		{	
-			strcat(filepath, direntry->d_name); //Step 2: get full path of file
-			length = strlen(filepath);			//store length of string
+			FILE * fp;                //creates a file pointer
+			strcpy(filepath, dir);	  //concatenates the path and the file
 
-			printf("%s\n",filepath);
+			if(dir[strlen(dir)-1] != '/') //if dir doesn't have / at the end
+			{
+				strcat(filepath, "/");//add the / for the whole path/.
+			}
 
-			fp = fopen(filepath, "r"); 			//Step 3: open file
 
-			//Step 4: perform some action and store result.
-		
-			fclose(fp);							//Step 5: close file
+			if (strcmp(direntry->d_name, ".") != 0 && strcmp(direntry->d_name, "..") != 0 )
+			{	
+				strcat(filepath, direntry->d_name); //Step 2: get full path of file
+				length = strlen(filepath);			//store length of string
+
+				//printf("%s\n",filepath);			//test the file path
+
+				fp = fopen(filepath, "r"); 			//Step 3: open file
+
+				//Step 4: perform some action and store result.
+				result = (*act)(fp,results,direntry->d_name);
+				sum += result;
+				memset(results,result,size);		//fills memory in results with the result	
+				fclose(fp);							//Step 5: close file
 			
+			}
+			direntry = readdir(directory); //read the next file in the path
 		}
-		direntry = readdir(directory); //read the next file in the path
+
+		closedir(directory); //close the directory stream
+		return sum; //return sum of all elements in the result array.
 	}
 
-	closedir(directory); //close the directory stream
-	return 1;
+	else{
+		return -1;
+	}
 
 }
 else{
-	return 0;
+	return -1;
 }
 }
 
