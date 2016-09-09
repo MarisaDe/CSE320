@@ -111,10 +111,9 @@ else if(strcmp(argv[0], "./mapreduce") == 0) {
 	}
 }
 //If it doesn't start with ./mapreduce it fails.
-else{
-	printhelp();
-	return EXIT_FAILURE*-1; //return -1
-	}
+printhelp();
+return EXIT_FAILURE*-1; //return -1
+
 }
 
 
@@ -192,7 +191,6 @@ numfiles = nfiles(dir); //checks to see how many files are in the dir
 //continue if there is at least 1 file to map.
 if(numfiles > 0)
 {
-	size_t length = 0;
 	DIR *directory;			  //creates a directory pointer
 	char filepath[100];
 	directory = opendir(dir); //open the directory.
@@ -205,6 +203,7 @@ if(numfiles > 0)
 		while(direntry != NULL)
 		{	
 			FILE * fp;                //creates a file pointer
+			int length = 0;			  //creates length for the string
 			strcpy(filepath, dir);	  //concatenates the path and the file
 
 			if(dir[strlen(dir)-1] != '/') //if dir doesn't have / at the end
@@ -246,4 +245,50 @@ else{
 }
 }
 
+/**
+* This reduce function takes the results produced by map and cumulates all
+* the data to give one final Analysis struct. Final struct should contain
+* filename of file which has longest line.
+*
+* @param  n        The number of files analyzed.
+* @param  results  The results array that has been populated by map.
+* @return          The struct containing all the cumulated data.
+*/
+struct Analysis analysis_reduce(int n,void* results)
+{
+	//Cast the void pointer as a struct Analysis pointer
+	struct Analysis* iresults = (struct Analysis*) results;
+	//Create the initial state of the struct Analysis to return
+	struct Analysis anal_final;
+	anal_final.lnno = 0;
+	anal_final.lnlen = 0;
+	anal_final.filename = NULL;
+	memset(anal_final.ascii, 0, sizeof anal_final.ascii);
+
+
+	//n = length of array of struct Analysis. 
+	int i = 0;
+	int ascii_index = 0;
+	for(; i<n; i++)
+	{
+		//goes through every element in the ascii array of the struct and adds it to the anal_final
+		for(; ascii_index<128; ascii_index++)
+		{
+
+			anal_final.ascii[ascii_index] += iresults[i].ascii[ascii_index];
+		}
+
+		ascii_index = 0;	//resets the index to reference ascii[ascii] to 0.
+
+		if (iresults[i].lnlen > anal_final.lnlen)
+		{
+			anal_final.lnlen = iresults[i].lnlen;
+			anal_final.lnno = iresults[i].lnno;
+			anal_final.filename = iresults[i].filename;
+		}
+
+	}
+	return anal_final;
+
+}
 

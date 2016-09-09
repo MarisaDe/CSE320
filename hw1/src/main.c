@@ -18,18 +18,68 @@ int cat(FILE* f, void* res, char* filename) {
     return n;
 }
 
+
+
+
 int main(int argc, char** argv) {
-	int test = 0;
+	//int test = 0;
 	//test = validateargs(argc, argv);
     //printf("%d\n", test); //test return value
     //int files = 0;
     //files = nfiles(argv[1]); //tests the directory based on input
     //printf("%i\n", files);   //tests the files counted from nfiles
-    int mapp = 0;
-    int (*act)(FILE*, void*, char*);    //create a function pointer
-    act = cat;    //set the pointer to point at the cat function
-    size_t size = 100;  //test size      
-    mapp = map(argv[1],analysis_space,size,act); //test map function
-    printf("%i\n",mapp);
+    //int mapp = 0;
+    //int (*act)(FILE*, void*, char*);    //create a function pointer
+    //act = cat;    //set the pointer to point at the cat function
+    //size_t size = 100;  //test size      
+    //mapp = map(argv[1],analysis_space,size,act); //test map function
+    //printf("%i\n",mapp);
+    //int counter = 0;
+
+
+    //test structs
+    struct Analysis pointy[3]; 
+
+    memset(pointy[0].ascii, 0, sizeof pointy[0].ascii);
+    memset(pointy[1].ascii, 0, sizeof pointy[1].ascii);
+    memset(pointy[2].ascii, 0, sizeof pointy[2].ascii);
+
+    pointy[0].lnlen = 2;
+    pointy[0].lnno = 63;
+    pointy[0].filename = "foiled";
+    pointy[0].ascii[1] = 3;
+
+    pointy[1].lnlen = 50;
+    pointy[1].lnno = 34;
+    pointy[1].filename = "foiled";
+    pointy[1].ascii[1] = 3;
+
+
+    pointy[2].lnlen = 100;
+    pointy[2].lnno = 26;
+    pointy[2].filename = "thisisthelongest";
+    pointy[2].ascii[1] = 5;
+
+
+   
+    
+    struct Analysis result;    
+
+    result = analysis_reduce(3,pointy);  
+
+
+    printf("%d\n", result.lnlen); 
+    printf("%d\n", result.lnno);
+    printf("%s\n", result.filename);
+
+
+    int i=0;
+    for (; i<128; i++)
+    {
+        printf("%i\n", result.ascii[i]);
+    }
+
+
+
     return EXIT_SUCCESS;  
 }
