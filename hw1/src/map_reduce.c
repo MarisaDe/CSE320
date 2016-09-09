@@ -282,13 +282,92 @@ struct Analysis analysis_reduce(int n,void* results)
 
 		if (iresults[i].lnlen > anal_final.lnlen)
 		{
-			anal_final.lnlen = iresults[i].lnlen;
+			anal_final.lnlen = iresults[i].lnlen;  //sets final struct Analysis lnlen to the struct with longest lnlen.
 			anal_final.lnno = iresults[i].lnno;
 			anal_final.filename = iresults[i].filename;
 		}
 
 	}
 	return anal_final;
+
+}
+
+/**
+ * This reduce function takes the results produced by map and cumulates all
+ * the data to give one final Stats struct. Filename field in the final struct 
+ * should be set to NULL.
+ *
+ * @param  n       The number of files analyzed.
+ * @param  results The results array that has been populated by map.
+ * @return         The struct containing all the cumulated data.
+ */
+Stats stats_reduce(int n, void* results)
+{
+
+	//Cast the void pointer as a struct Stats pointer
+	struct Stats* iresults = (struct Stats*) results;
+	printf("%d\n",iresults[n].n);
+
+	//Create the initial state of the struct Stats to return
+	Stats stats_final;
+	stats_final.filename = NULL;
+	stats_final.sum = 0;
+	stats_final.n = 0;
+	memset(stats_final.histogram, 0, sizeof stats_final.histogram);
+
+	//create counter variables
+	int i = 0;
+	int histo_index = 0;
+	for(; i<n; i++)
+	{
+
+		//goes through every element in the histogram array of the struct and adds it to the histo_final
+		for(; histo_index<NVAL; histo_index++)
+		{
+
+			stats_final.histogram[histo_index] += iresults[i].histogram[histo_index];
+		}
+
+		histo_index = 0;	//resets the index to reference ascii[ascii] to 0.
+	
+		//update the sum and total count of nums in the files
+		stats_final.sum+=iresults[n].sum;
+		stats_final.n+=iresults[n].n;
+		//printf("%d\n",iresults[n].n);
+
+
+	}
+	return stats_final;
+
+}
+
+
+/**
+ * Always prints the following:
+ * - The name of the file (for the final result the file with the longest line)
+ * - The longest line in the directory's length.
+ * - The longest line in the directory's line number.
+ *
+ * Prints only for the final result:
+ * - The total number of bytes in the directory.
+ *
+ * If the hist parameter is non-zero print the histogram of ASCII character
+ * occurrences. When printing out details for each file (i.e the -v option was
+ * selected) you MUST NOT print the histogram. However, it MUST be printed for
+ * the final result.
+ *
+ * Look at sample output for examples of how this should be print. You have to
+ * match the sample output for full credit.
+ *
+ * @param res    The final result returned by analysis_reduce
+ * @param nbytes The number of bytes in the directory.
+ * @param hist   If this is non-zero, prints additional information. (Only non-
+ *               zero for printing the final result.)
+ */
+void analysis_print(struct Analysis res, int nbytes, int hist)
+{
+
+
 
 }
 

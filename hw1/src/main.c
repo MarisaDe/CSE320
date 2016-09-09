@@ -37,49 +37,86 @@ int main(int argc, char** argv) {
     //int counter = 0;
 
 
-    //test structs
-    struct Analysis pointy[3]; 
+    //test analysis_reduce
+    // struct Analysis pointy[3]; 
 
-    memset(pointy[0].ascii, 0, sizeof pointy[0].ascii);
-    memset(pointy[1].ascii, 0, sizeof pointy[1].ascii);
-    memset(pointy[2].ascii, 0, sizeof pointy[2].ascii);
+    // memset(pointy[0].ascii, 0, sizeof pointy[0].ascii);
+    // memset(pointy[1].ascii, 0, sizeof pointy[1].ascii);
+    // memset(pointy[2].ascii, 0, sizeof pointy[2].ascii);
 
-    pointy[0].lnlen = 2;
-    pointy[0].lnno = 63;
-    pointy[0].filename = "foiled";
-    pointy[0].ascii[1] = 3;
+    // pointy[0].lnlen = 2;
+    // pointy[0].lnno = 63;
+    // pointy[0].filename = "foiled";
+    // pointy[0].ascii[1] = 3;
 
-    pointy[1].lnlen = 50;
-    pointy[1].lnno = 34;
-    pointy[1].filename = "foiled";
-    pointy[1].ascii[1] = 3;
-
-
-    pointy[2].lnlen = 100;
-    pointy[2].lnno = 26;
-    pointy[2].filename = "thisisthelongest";
-    pointy[2].ascii[1] = 5;
+    // pointy[1].lnlen = 50;
+    // pointy[1].lnno = 34;
+    // pointy[1].filename = "foiled";
+    // pointy[1].ascii[1] = 3;
 
 
-   
-    
-    struct Analysis result;    
-
-    result = analysis_reduce(3,pointy);  
-
-
-    printf("%d\n", result.lnlen); 
-    printf("%d\n", result.lnno);
-    printf("%s\n", result.filename);
+    // pointy[2].lnlen = 100;
+    // pointy[2].lnno = 26;
+    // pointy[2].filename = "thisisthelongest";
+    // pointy[2].ascii[1] = 5;
 
 
-    int i=0;
-    for (; i<128; i++)
+
+    // struct Analysis result;    
+
+    // result = analysis_reduce(3,pointy);  
+
+
+    // printf("%d\n", result.lnlen); 
+    // printf("%d\n", result.lnno);
+    // printf("%s\n", result.filename);
+
+
+    // int i=0;
+    // for (; i<128; i++)
+    // {
+    //     printf("%i\n", result.ascii[i]);
+    // }
+
+
+    // TEST stats_reduce
+    Stats pointy2[3]; 
+    memset(pointy2[0].histogram, 0, sizeof pointy2[0].histogram);
+    memset(pointy2[1].histogram, 0, sizeof pointy2[1].histogram);
+    memset(pointy2[2].histogram, 0, sizeof pointy2[2].histogram);
+
+    pointy2[0].n = 30;
+    pointy2[1].n = 10;
+    pointy2[2].n = 20;
+
+    pointy2[0].sum = 100;
+    pointy2[1].sum = 150;
+    pointy2[2].sum = 50;
+
+    pointy2[0].histogram[0] = 5;
+    pointy2[0].histogram[1] = 5;
+    pointy2[1].histogram[0] = 2;
+    pointy2[2].histogram[0] = 1;
+
+    printf("%d\n", pointy2[0].n);
+    printf("%d\n", pointy2[1].n);
+    printf("%d\n", pointy2[2].n);
+
+    Stats cumulate;
+
+    cumulate = stats_reduce(3, pointy2);
+
+    //printf("%d\n", cumulate.sum); 
+    //printf("%d\n", cumulate.n);
+
+    int i = 0;
+    for (; i<NVAL; i++)
     {
-        printf("%i\n", result.ascii[i]);
+        printf("%i\n", cumulate.histogram[i]);
     }
-
 
 
     return EXIT_SUCCESS;  
 }
+
+
