@@ -389,6 +389,7 @@ void analysis_print(struct Analysis res, int nbytes, int hist)
 	{
 		printf("%s", "Total Bytes in directory: ");
 		printf("%d\n", nbytes);
+		printf("%s\n", "Histogram:");
 
 		for(i=0; i<128; i++)
 		{
@@ -396,7 +397,7 @@ void analysis_print(struct Analysis res, int nbytes, int hist)
 			if(res.ascii[i] != 0)
 			{
 				//print out histogram of the index
-				printf("%d.%s", i," :");
+				printf("%s%d%s", " ", i,":");
 
 				//print the - for each instance
 				for(p=0; p<res.ascii[i]; p++)
@@ -432,8 +433,9 @@ void analysis_print(struct Analysis res, int nbytes, int hist)
  */
 void stats_print(Stats res, int hist)
 {
-	int min,max,mode, medianfound, pos1, pos2, indextot,pos1found, pos2found, q1pos, q3pos;
+	int i, p, min,max, medianfound, pos1, pos2, indextot,pos1found, pos2found, q1pos, q3pos;
 	int q1found, q3found, modefound;
+	char mode[NVAL];
 	modefound = -1;
 	q1found = -1;
 	q3found = -1;
@@ -441,8 +443,42 @@ void stats_print(Stats res, int hist)
 	medianfound = -1;
 	int isEven = 0;
 	double mean, median, q1, q3; 
-	printf("%s%d\n", "Count: ", res.n);
 
+
+	//print filename if hist = 0
+	if(hist == 0)
+	{
+		printf("%s%d\n","File: ",res.filename);
+	}
+
+	//print histogram if filename !=0
+	else{
+
+		printf("%s\n","Histogram:");
+		for(i=0; i<NVAL; i++)
+		{
+			//If there are elements in the index
+			if(res.histogram[i] != 0)
+			{
+				//print out histogram of the index
+				printf("%d%s", i,"  :");
+
+				//print the - for each instance
+				for(p=0; p<res.histogram[i]; p++)
+				{
+					printf("%s", "-");
+				}
+
+				printf("%s","\n");
+			}
+			
+		}
+		printf("%s","\n");
+
+
+	}
+	
+	printf("%s%d\n", "Count: ", res.n);
 	//count is even		
 	if(res.n %2 == 0)
 	{	
@@ -465,7 +501,6 @@ void stats_print(Stats res, int hist)
 	q1pos = res.n *0.25;
 	q3pos = res.n *0.75;
 
-	int i;
 	for(i=0; i<NVAL; i++)
 		{
 			//If there are elements in the index
@@ -521,8 +556,18 @@ void stats_print(Stats res, int hist)
 	if(isEven) median = (pos1 + pos2)/2;
 
 
+	for(i=0; i<NVAL; i++){
+
+		if(modefound == res.histogram[i])
+		{
+			//strcat(mode, (char)res.histogram[i]);
+		}
+	}
+	
+
 	mean = (double)res.sum / (double)res.n;
 	printf("%s%f\n", "Mean: ", mean);
+	printf("%s%s\n", "Mode: ", mode);
 	printf("%s%f\n", "Median: ", median);
 	printf("%s%f\n", "Q1: ", q1);
 	printf("%s%f\n", "Q3: ", q3);

@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 
     struct Analysis result;    
 
-    //result = analysis_reduce(3,pointy);  
+    result = analysis_reduce(3,pointy);  
 
 
     // printf("%d\n", result.lnlen); 
@@ -119,8 +119,8 @@ int main(int argc, char** argv) {
 
 
     // TEST ANALYIS_PRINT
-    //analysis_print(result,100,1);
-    //analysis_print(result,50,0);
+    analysis_print(result,100,1);
+    analysis_print(result,50,0);
 
 
     //TEST STATS_PRINT
