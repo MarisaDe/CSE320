@@ -432,7 +432,11 @@ void analysis_print(struct Analysis res, int nbytes, int hist)
  */
 void stats_print(Stats res, int hist)
 {
-	int min,max,mode, medianfound, pos1, pos2, indextot,pos1found, pos2found;
+	int min,max,mode, medianfound, pos1, pos2, indextot,pos1found, pos2found, q1pos, q3pos;
+	int q1found, q3found, modefound;
+	modefound = -1;
+	q1found = -1;
+	q3found = -1;
 	min = -1;;
 	medianfound = -1;
 	int isEven = 0;
@@ -458,6 +462,8 @@ void stats_print(Stats res, int hist)
 		indextot = 0;
 	}
 
+	q1pos = res.n *0.25;
+	q3pos = res.n *0.75;
 
 	int i;
 	for(i=0; i<NVAL; i++)
@@ -467,9 +473,24 @@ void stats_print(Stats res, int hist)
 			{	
 				if(min == -1) min = i; 	//set min to first instance of a number value	
 				if(max < i) max = i;	//set max to last instance of a number value
+				if(res.histogram[i] > modefound) modefound = res.histogram[i]; //set modefound to highest count of element
 
 				indextot += res.histogram[i];
-				
+
+				//finds the q1
+				if((q1pos == indextot || q1pos < indextot) && q1found != 1)
+				{
+					q1 = i;
+					q1found = 1;
+				}
+				//finds the q3
+				if((q3pos == indextot || q3pos < indextot) && q3found != 1)
+				{
+					q3 = i;
+					q3found = 1;
+				}
+
+
 				//figures the median for an even count
 				if(isEven && (pos1found == -1 || pos2found == -1))
 				{
@@ -503,6 +524,8 @@ void stats_print(Stats res, int hist)
 	mean = (double)res.sum / (double)res.n;
 	printf("%s%f\n", "Mean: ", mean);
 	printf("%s%f\n", "Median: ", median);
+	printf("%s%f\n", "Q1: ", q1);
+	printf("%s%f\n", "Q3: ", q3);
 	printf("%s%d\n", "Min: ", min);
 	printf("%s%d\n", "Max: ", max);
 
