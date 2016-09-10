@@ -326,6 +326,7 @@ Stats stats_reduce(int n, void* results)
 		{
 
 			stats_final.histogram[histo_index] += iresults[i].histogram[histo_index];
+
 		}
 
 		histo_index = 0;	//resets the index to reference ascii[ascii] to 0.
@@ -365,9 +366,49 @@ Stats stats_reduce(int n, void* results)
  *               zero for printing the final result.)
  */
 void analysis_print(struct Analysis res, int nbytes, int hist)
-{
+{	
+	//Print filename!
+	printf("%s", "File: ");
+	printf("%s\n", res.filename);
 
+	//Print longest line length!
+	printf("%s", "Longest line length: ");
+	printf("%d\n", res.lnlen);
 
+	//Print longest line in the directory's line number!
+	printf("%s", "Longest line number: ");
+	printf("%d\n", res.lnno);
+
+	//Print bytes somewhere??? How to determine if res is the final struct idk.
+
+	//Print histogram if it is non-zero. If nonzero, it prints final result I guess.
+
+	int i;
+	int p;
+	if(hist !=0)
+	{
+		printf("%s", "Total Bytes in directory: ");
+		printf("%d\n", nbytes);
+
+		for(i=0; i<128; i++)
+		{
+			//If there are elements in the index
+			if(res.ascii[i] != 0)
+			{
+				//print out histogram of the index
+				printf("%d.%s", i," :");
+
+				//print the - for each instance
+				for(p=0; p<res.ascii[i]; p++)
+				{
+					printf("%s", "-");
+				}
+
+				printf("%s","\n");
+			}
+			
+		}
+	}
 
 }
 

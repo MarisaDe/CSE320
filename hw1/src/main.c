@@ -38,33 +38,34 @@ int main(int argc, char** argv) {
 
 
     //test analysis_reduce
-    // struct Analysis pointy[3]; 
+    struct Analysis pointy[3]; 
 
-    // memset(pointy[0].ascii, 0, sizeof pointy[0].ascii);
-    // memset(pointy[1].ascii, 0, sizeof pointy[1].ascii);
-    // memset(pointy[2].ascii, 0, sizeof pointy[2].ascii);
+    memset(pointy[0].ascii, 0, sizeof pointy[0].ascii);
+    memset(pointy[1].ascii, 0, sizeof pointy[1].ascii);
+    memset(pointy[2].ascii, 0, sizeof pointy[2].ascii);
 
-    // pointy[0].lnlen = 2;
-    // pointy[0].lnno = 63;
-    // pointy[0].filename = "foiled";
-    // pointy[0].ascii[1] = 3;
+    pointy[0].lnlen = 2;
+    pointy[0].lnno = 63;
+    pointy[0].filename = "foiled";
+    pointy[0].ascii[1] = 3;
 
-    // pointy[1].lnlen = 50;
-    // pointy[1].lnno = 34;
-    // pointy[1].filename = "foiled";
-    // pointy[1].ascii[1] = 3;
-
-
-    // pointy[2].lnlen = 100;
-    // pointy[2].lnno = 26;
-    // pointy[2].filename = "thisisthelongest";
-    // pointy[2].ascii[1] = 5;
+    pointy[1].lnlen = 50;
+    pointy[1].lnno = 34;
+    pointy[1].filename = "foiled";
+    pointy[1].ascii[1] = 3;
+    pointy[1].ascii[8] = 6;
 
 
+    pointy[2].lnlen = 100;
+    pointy[2].lnno = 26;
+    pointy[2].filename = "thisisthelongest";
+    pointy[2].ascii[1] = 5;
 
-    // struct Analysis result;    
 
-    // result = analysis_reduce(3,pointy);  
+
+    struct Analysis result;    
+
+    result = analysis_reduce(3,pointy);  
 
 
     // printf("%d\n", result.lnlen); 
@@ -104,18 +105,21 @@ int main(int argc, char** argv) {
 
     Stats cumulate;
 
-    cumulate = stats_reduce(3, pointy2);
+    //cumulate = stats_reduce(3, pointy2);
 
     //printf("%d\n", cumulate.sum); 
     //printf("%d\n", cumulate.n);
 
-    int i = 0;
-    for (; i<NVAL; i++)
-    {
-        printf("%i\n", cumulate.histogram[i]);
-    }
+    //int i = 0;
+    //for (; i<NVAL; i++)
+    //{
+        //printf("%i\n", cumulate.histogram[i]);
+    //}
 
 
+    // TEST ANAYLYIS_PRINT
+    analysis_print(result,100,1);
+    analysis_print(result,50,0);
     return EXIT_SUCCESS;  
 }
 
