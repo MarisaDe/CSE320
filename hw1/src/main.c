@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 
     struct Analysis result;    
 
-    result = analysis_reduce(3,pointy);  
+    //result = analysis_reduce(3,pointy);  
 
 
     // printf("%d\n", result.lnlen); 
@@ -99,11 +99,12 @@ int main(int argc, char** argv) {
     pointy2[1].histogram[0] = 2;
     pointy2[2].histogram[0] = 1;
 
-    printf("%d\n", pointy2[0].n);
-    printf("%d\n", pointy2[1].n);
-    printf("%d\n", pointy2[2].n);
+    //printf("%d\n", pointy2[0].n);
+    //printf("%d\n", pointy2[1].n);
+    //printf("%d\n", pointy2[2].n);
 
-    Stats cumulate;
+    //Stats cumulate;
+
 
     //cumulate = stats_reduce(3, pointy2);
 
@@ -117,9 +118,28 @@ int main(int argc, char** argv) {
     //}
 
 
-    // TEST ANAYLYIS_PRINT
-    analysis_print(result,100,1);
-    analysis_print(result,50,0);
+    // TEST ANALYIS_PRINT
+    //analysis_print(result,100,1);
+    //analysis_print(result,50,0);
+
+
+    //TEST STATS_PRINT
+    Stats teststat;
+    memset(teststat.histogram, 0, sizeof teststat.histogram);
+
+    teststat.n = 17;
+    teststat.sum = 40;
+    teststat.histogram[0] = 0;
+    teststat.histogram[1] = 4;
+    teststat.histogram[2] = 3;
+    teststat.histogram[3] = 10;
+
+    //printf("%d", teststat.histogram[0]);
+
+
+
+    stats_print(teststat,1);
+
     return EXIT_SUCCESS;  
 }
 

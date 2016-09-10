@@ -412,3 +412,47 @@ void analysis_print(struct Analysis res, int nbytes, int hist)
 
 }
 
+/**
+ * Always prints the following:
+ * Count (total number of numbers read), Mean, Mode, Median, Q1, Q3, Min, Max
+ *
+ * Prints only for each Map result:
+ * The file name
+ *
+ * If the hist parameter is non-zero print the the histogram. When printing out
+ * details for each file (i.e the -v option was selected) you MUST NOT print the
+ * histogram. However, it MUST be printed for the final result.
+ *
+ * Look at sample output for examples of how this should be print. You have to
+ * match the sample output for full credit.
+ *
+ * @param res  The final result returned by stats_reduce
+ * @param hist If this is non-zero, prints additional information. (Only non-
+ *             zero for printing the final result.)
+ */
+void stats_print(Stats res, int hist)
+{
+	int min,max,mode;
+	min = -1;
+	double mean, median, q1, q3; 
+	printf("%s%d\n", "Count: ", res.sum);
+
+	int i;
+	for(i=0; i<NVAL; i++)
+		{
+			//If there are elements in the index
+			if(res.histogram[i] > 0)
+			{	
+				if(min == -1) min = i; 	//set min to first instance of a number value	
+				if(max < i) max = i;	//set max to last instance of a number value
+			}
+			
+		}
+	mean = (double)res.sum / (double)res.n;
+	printf("%s%f\n", "Mean: ", mean);
+	printf("%s%d\n", "Min: ", min);
+	printf("%s%d\n", "Max: ", max);
+
+
+}
+
