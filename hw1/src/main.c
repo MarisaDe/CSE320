@@ -127,11 +127,10 @@ int main(int argc, char** argv) {
     Stats teststat;
     memset(teststat.histogram, 0, sizeof teststat.histogram);
 
-    teststat.n = 17;
-    teststat.sum = 40;
-    teststat.histogram[0] = 0;
-    teststat.histogram[1] = 4;
-    teststat.histogram[2] = 3;
+    teststat.n = 48;
+    teststat.sum = 87;
+    teststat.histogram[1] = 19;
+    teststat.histogram[2] = 19;
     teststat.histogram[3] = 10;
 
     //printf("%d", teststat.histogram[0]);

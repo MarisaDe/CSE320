@@ -432,10 +432,32 @@ void analysis_print(struct Analysis res, int nbytes, int hist)
  */
 void stats_print(Stats res, int hist)
 {
-	int min,max,mode;
-	min = -1;
+	int min,max,mode, medianfound, pos1, pos2, indextot,pos1found, pos2found;
+	min = -1;;
+	medianfound = -1;
+	int isEven = 0;
 	double mean, median, q1, q3; 
-	printf("%s%d\n", "Count: ", res.sum);
+	printf("%s%d\n", "Count: ", res.n);
+
+	//count is even		
+	if(res.n %2 == 0)
+	{	
+		isEven = 1;
+		pos1 = res.n/2;
+		pos2 = res.n/2-1;
+		pos1found = -1;
+		pos2found = -1;
+		indextot = 0;
+
+	}
+	//count is odd
+	else{
+
+		isEven = 0;
+		median = res.n/2;
+		indextot = 0;
+	}
+
 
 	int i;
 	for(i=0; i<NVAL; i++)
@@ -445,11 +467,42 @@ void stats_print(Stats res, int hist)
 			{	
 				if(min == -1) min = i; 	//set min to first instance of a number value	
 				if(max < i) max = i;	//set max to last instance of a number value
+
+				indextot += res.histogram[i];
+				
+				//figures the median for an even count
+				if(isEven && (pos1found == -1 || pos2found == -1))
+				{
+					if(pos1 == indextot || pos1 < indextot)
+					{
+						pos1= i;
+						pos1found = 1;
+					}
+					if(pos2 == indextot || pos2 < indextot) 
+					{
+						pos2= i;
+						pos2found = 1;
+					}
+				}
+				//figures the median for an odd count
+				else
+				{
+					if((median == indextot || median < indextot) && medianfound != 1)
+					{
+						median = i;	
+						medianfound = 1;					
+					}
+				}
 			}
 			
 		}
+
+	if(isEven) median = (pos1 + pos2)/2;
+
+
 	mean = (double)res.sum / (double)res.n;
 	printf("%s%f\n", "Mean: ", mean);
+	printf("%s%f\n", "Median: ", median);
 	printf("%s%d\n", "Min: ", min);
 	printf("%s%d\n", "Max: ", max);
 
