@@ -28,12 +28,12 @@ int main(int argc, char** argv) {
     //int files = 0;
     //files = nfiles(argv[1]); //tests the directory based on input
     //printf("%i\n", files);   //tests the files counted from nfiles
-    //int mapp = 0;
-    //int (*act)(FILE*, void*, char*);    //create a function pointer
-    //act = cat;    //set the pointer to point at the cat function
-    //size_t size = 100;  //test size      
-    //mapp = map(argv[1],analysis_space,size,act); //test map function
-    //printf("%i\n",mapp);
+    int mapp = 0;
+    int (*act)(FILE*, void*, char*);    //create a function pointer
+    act = analysis;    //set the pointer to point at the cat function
+    size_t size = 100;  //test size      
+    mapp = map(argv[1],analysis_space,size,act); //test map function
+    printf("%i\n",mapp);
     //int counter = 0;
 
 
@@ -63,9 +63,9 @@ int main(int argc, char** argv) {
 
 
 
-    struct Analysis result;    
+    //struct Analysis result;    
 
-    result = analysis_reduce(3,pointy);  
+    //result = analysis_reduce(3,pointy);  
 
 
     // printf("%d\n", result.lnlen); 
@@ -81,23 +81,23 @@ int main(int argc, char** argv) {
 
 
     // TEST stats_reduce
-    Stats pointy2[3]; 
-    memset(pointy2[0].histogram, 0, sizeof pointy2[0].histogram);
-    memset(pointy2[1].histogram, 0, sizeof pointy2[1].histogram);
-    memset(pointy2[2].histogram, 0, sizeof pointy2[2].histogram);
+    // Stats pointy2[3]; 
+    // memset(pointy2[0].histogram, 0, sizeof pointy2[0].histogram);
+    // memset(pointy2[1].histogram, 0, sizeof pointy2[1].histogram);
+    // memset(pointy2[2].histogram, 0, sizeof pointy2[2].histogram);
 
-    pointy2[0].n = 30;
-    pointy2[1].n = 10;
-    pointy2[2].n = 20;
+    // pointy2[0].n = 30;
+    // pointy2[1].n = 10;
+    // pointy2[2].n = 20;
 
-    pointy2[0].sum = 100;
-    pointy2[1].sum = 150;
-    pointy2[2].sum = 50;
+    // pointy2[0].sum = 100;
+    // pointy2[1].sum = 150;
+    // pointy2[2].sum = 50;
 
-    pointy2[0].histogram[0] = 5;
-    pointy2[0].histogram[1] = 5;
-    pointy2[1].histogram[0] = 2;
-    pointy2[2].histogram[0] = 1;
+    // pointy2[0].histogram[0] = 5;
+    // pointy2[0].histogram[1] = 5;
+    // pointy2[1].histogram[0] = 2;
+    // pointy2[2].histogram[0] = 1;
 
     //printf("%d\n", pointy2[0].n);
     //printf("%d\n", pointy2[1].n);
@@ -119,25 +119,25 @@ int main(int argc, char** argv) {
 
 
     // TEST ANALYIS_PRINT
-    analysis_print(result,100,1);
-    analysis_print(result,50,0);
+    // analysis_print(result,100,1);
+    // analysis_print(result,50,0);
 
 
     //TEST STATS_PRINT
-    Stats teststat;
-    memset(teststat.histogram, 0, sizeof teststat.histogram);
+    // Stats teststat;
+    // memset(teststat.histogram, 0, sizeof teststat.histogram);
 
-    teststat.n = 48;
-    teststat.sum = 87;
-    teststat.histogram[1] = 19;
-    teststat.histogram[2] = 19;
-    teststat.histogram[3] = 10;
+    // teststat.n = 48;
+    // teststat.sum = 87;
+    // teststat.histogram[1] = 19;
+    // teststat.histogram[2] = 19;
+    // teststat.histogram[3] = 10;
 
-    //printf("%d", teststat.histogram[0]);
+    // //printf("%d", teststat.histogram[0]);
 
 
 
-    stats_print(teststat,1);
+    // stats_print(teststat,1);
 
     return EXIT_SUCCESS;  
 }

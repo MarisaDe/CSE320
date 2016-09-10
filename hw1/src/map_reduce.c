@@ -204,7 +204,7 @@ if(numfiles > 0)
 		while(direntry != NULL)
 		{	
 			FILE * fp;                //creates a file pointer
-			int length = 0;			  //creates length for the string
+			//int length = 0;		  //creates length for the string
 			strcpy(filepath, dir);	  //copies the path
 
 			if(dir[strlen(dir)-1] != '/') //if dir doesn't have / at the end
@@ -216,8 +216,7 @@ if(numfiles > 0)
 			if (strcmp(direntry->d_name, ".") != 0 && strcmp(direntry->d_name, "..") != 0 )
 			{	
 				strcat(filepath, direntry->d_name); //Step 2: get full path of file
-				length = strlen(filepath);			//store length of string
-
+				//length = strlen(filepath);		//store length of string
 				//printf("%s\n",filepath);			//test the file path
 
 				fp = fopen(filepath, "r"); 			//Step 3: open file
@@ -577,6 +576,58 @@ void stats_print(Stats res, int hist)
 	printf("%s%d\n", "Min: ", min);
 	printf("%s%d\n", "Max: ", max);
 
+
+}
+
+
+/**
+ * This function performs various different analyses on a file. It
+ * calculates the total number of bytes in the file, stores the longest line
+ * length and the line number, and frequencies of ASCII characters in the file.
+ *
+ * @param  f        The filestream on which the action will be performed. You
+ *                  can assume the filestream passed by map will be valid.
+ * @param  res      The slot in the results array in which the data will be
+ *                  stored.
+ * @param  filename The filename of the file currently being processed.
+ * @return          Return the number of bytes read.
+ */
+int analysis(FILE* f, void* res, char* filename){
+
+	//Cast the void pointer as a struct Analysis pointer
+	//res = (struct Analysis*) res;
+	//Create the initial state of the struct Analysis to return
+	//much of the code in cat can be used to calculate total number of bytes.
+	char c;
+	int n;
+	while((c = fgetc(f)) != EOF) {
+        n++;
+    }
+
+    rewind(f);
+    int longestline = 0;
+    int linenum = 0;
+    int linenumcomp = 0;
+    char line[1000];
+
+    //goes through each line in the file
+    	while (fgets(line, n, f) != NULL)
+    	{
+    		linenumcomp++;
+    		//gets longest line of the line farthest down in the file
+    		//gets longest line number
+    		if(strlen(line) > longestline || strlen(line) == longestline) 
+    			{
+    				longestline = strlen(line);
+    				linenum = linenumcomp;			
+    			}
+   			printf("Read Buffer: %s\n", line );
+
+     	}
+
+    printf("%s%d\n", "Longest line length: ", longestline);
+    printf("%s%d\n", "Longest line num: ", linenum);
+    return n;
 
 }
 
