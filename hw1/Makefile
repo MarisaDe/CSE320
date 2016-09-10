@@ -24,7 +24,7 @@ make_folders:
 
 
 link: compile 
-	  gcc ./build/** -o ./bin/mapreduce
+	  gcc ./build/** -o ./bin/mapreduce -lm
 
 compile: main map_reduce
 
@@ -32,7 +32,7 @@ main:
 	$(COMP)
 
 map_reduce:
-	$(COMP)
+	$(COMP) 
 
 
 .PHONY: clean

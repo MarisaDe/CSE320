@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <string.h>
+#include <math.h>
 
 //Implement map_reduce.h functions here.
 
@@ -204,7 +205,7 @@ if(numfiles > 0)
 		{	
 			FILE * fp;                //creates a file pointer
 			int length = 0;			  //creates length for the string
-			strcpy(filepath, dir);	  //concatenates the path and the file
+			strcpy(filepath, dir);	  //copies the path
 
 			if(dir[strlen(dir)-1] != '/') //if dir doesn't have / at the end
 			{
@@ -433,13 +434,13 @@ void analysis_print(struct Analysis res, int nbytes, int hist)
  */
 void stats_print(Stats res, int hist)
 {
-	int i, p, min,max, medianfound, pos1, pos2, indextot,pos1found, pos2found, q1pos, q3pos;
+	int mode, i, p, min,max, medianfound, pos1, pos2, indextot,pos1found, pos2found, q1pos, q3pos;
 	int q1found, q3found, modefound;
-	char mode[NVAL];
+	mode = 0;
 	modefound = -1;
 	q1found = -1;
 	q3found = -1;
-	min = -1;;
+	min = -1;
 	medianfound = -1;
 	int isEven = 0;
 	double mean, median, q1, q3; 
@@ -448,7 +449,7 @@ void stats_print(Stats res, int hist)
 	//print filename if hist = 0
 	if(hist == 0)
 	{
-		printf("%s%d\n","File: ",res.filename);
+		printf("%s%s\n","File: ",res.filename);
 	}
 
 	//print histogram if filename !=0
@@ -498,8 +499,8 @@ void stats_print(Stats res, int hist)
 		indextot = 0;
 	}
 
-	q1pos = res.n *0.25;
-	q3pos = res.n *0.75;
+	q1pos = ceil(res.n *0.25);
+	q3pos = ceil(res.n *0.75);
 
 	for(i=0; i<NVAL; i++)
 		{
@@ -556,19 +557,21 @@ void stats_print(Stats res, int hist)
 	if(isEven) median = (pos1 + pos2)/2;
 
 
+	mean = (double)res.sum / (double)res.n;
+	printf("%s%f\n", "Mean: ", mean);
+	printf("%s", "Mode: ");
+
+	//update the mode string
 	for(i=0; i<NVAL; i++){
 
 		if(modefound == res.histogram[i])
 		{
-			//strcat(mode, (char)res.histogram[i]);
+			mode = i;
+			printf("%i%s",mode, " ");
 		}
 	}
 	
-
-	mean = (double)res.sum / (double)res.n;
-	printf("%s%f\n", "Mean: ", mean);
-	printf("%s%s\n", "Mode: ", mode);
-	printf("%s%f\n", "Median: ", median);
+	printf("\n%s%f\n", "Median: ", median);
 	printf("%s%f\n", "Q1: ", q1);
 	printf("%s%f\n", "Q3: ", q3);
 	printf("%s%d\n", "Min: ", min);
