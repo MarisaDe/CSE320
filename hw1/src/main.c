@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
     
     int test = 0;                      //initialize variable to hold the validateargs return
     test = validateargs(argc, argv);   //check the user input
+    //printf("%d",test);
 
     //-h flag was choosen
     if(test == 0)
@@ -56,7 +57,7 @@ int main(int argc, char** argv) {
     else if(test == 1)
     {
         struct Analysis anal_cum;           //create an Analysis struct with garbage to use later
-        act = analysis;                              //set the pointer to point at the analysis function
+        act = analysis;                     //set the pointer to point at the analysis function
         numoffiles = nfiles(argv[2]);
         mapp = map(argv[2],analysis_space,sizeof(struct Analysis),act); //test map function
         anal_cum = analysis_reduce(numoffiles,analysis_space);
@@ -65,10 +66,13 @@ int main(int argc, char** argv) {
     }
     //stats (JUST the final result)
     else if(test == 2)
-    {
-        act = stats;                              //set the pointer to point at the analysis function
+    {   
+        struct Stats stats_cum;
+        act = stats;                              //set the pointer to point at the stats function
+        numoffiles = nfiles(argv[2]);
         mapp = map(argv[2],stats_space,sizeof(struct Stats),act); //test map function
-        //stats_cum = stats_reduce(mapp,stats_space);
+        stats_cum = stats_reduce(numoffiles,stats_space);
+        stats_print(stats_cum, 1);  //prints final
     }
     //-v ana (ALL + final result)
     else if(test == 3)

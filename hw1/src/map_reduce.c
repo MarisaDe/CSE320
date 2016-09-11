@@ -1,6 +1,6 @@
 //**DO NOT** CHANGE THE PROTOTYPES FOR THE FUNCTIONS GIVEN TO YOU. WE TEST EACH
 //FUNCTION INDEPENDENTLY WITH OUR OWN MAIN PROGRAM.
-#include "../include/map_reduce.h"
+#include "map_reduce.h"
 #include <sys/types.h>
 #include <dirent.h>
 #include <string.h>
@@ -35,7 +35,6 @@ if(argc == 0 || argc == 1) return -1; //return -1
 //index 0 MUST be ./mapreduce
 else 
 {
-
 	//check for -h
 	if(strcmp(argv[1], "-h") == 0) return 0; //return 0
 
@@ -64,7 +63,7 @@ else
 		}
 
 		//else if DIR is invalid, print help and return failure.
-		else return -1; //return -1
+		return -1; //return -1
 	}
 
 	//DIR can only be in argv index 3 if -v IS used.	
@@ -85,9 +84,10 @@ else
 				else return -1; // invalid input
 				
 			}			
-			else return -1; //return -1 //DIR is invalid. 
+			return -1; //return -1 //DIR is invalid. 
 				
-		}	
+		}
+		return -1; //return -1 //DIR is invalid.	
 	
 	}
 	return -1; //return -1
@@ -284,7 +284,7 @@ Stats stats_reduce(int n, void* results)
 
 	//Cast the void pointer as a struct Stats pointer
 	struct Stats* iresults = (struct Stats*) results;
-	printf("%d\n",iresults[n].n);
+	//printf("%d\n",iresults[n].n);
 
 	//Create the initial state of the struct Stats to return
 	Stats stats_final;
@@ -418,6 +418,7 @@ void stats_print(Stats res, int hist)
 	q1found = -1;
 	q3found = -1;
 	min = -1;
+	max = 0;
 	medianfound = -1;
 	int isEven = 0;
 	double mean, median, q1, q3; 
@@ -626,6 +627,29 @@ int analysis(FILE* f, void* res, char* filename){
  * @return          Return 0 on success and -1 on failure.
  */
 int stats(FILE* f, void* res, char* filename){
+
+	//Cast the void pointer as a struct Stats pointer
+	struct Stats* pointres = (struct Stats*) res;
+	pointres->filename = filename;
+
+	int sum = 0;
+    int num = 0;
+    int n = 0;
+
+
+    while(!feof(f))  //while end of file has not been reached
+    {
+    	fscanf(f, "%d ",&num);
+    	//printf("%d", num );
+    	pointres->histogram[num]++; //update frequency of that number in the array
+    	n++;
+    	sum += num;
+    }
+	//printf("\n");
+
+	pointres->sum = sum;   //update sum of all numbers to the sum variable
+	pointres->n = n;	   //updates how many numbers are in the file
+
 
 	return -1;
 }
