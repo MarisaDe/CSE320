@@ -7,12 +7,11 @@
 
 IDIR =./include/
 ISRC = ./src/
-CFLAGS=-Wall 
-#-Werror
+CFLAGS=-Wall -Werror
 HEAD = map_reduce.h
 DEP = -I$(IDIR)
 BINS = map_reduce main
-COMP = gcc $(CFLAGS) -c $(ISRC)$@.c -o ./build/$@.o
+COMP = gcc $(CFLAGS) -c $(ISRC)$@.c -I include -o ./build/$@.o
 FOLDERS = build bin
 
 #############################################

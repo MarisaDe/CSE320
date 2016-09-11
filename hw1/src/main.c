@@ -1,4 +1,4 @@
-#include "../include/map_reduce.h"
+#include "map_reduce.h"
 
 //Space to store the results for analysis map
 struct Analysis analysis_space[NFILES];
@@ -57,13 +57,13 @@ int main(int argc, char** argv) {
     {
         struct Analysis anal_cum;           //create an Analysis struct with garbage to use later
         act = analysis;                              //set the pointer to point at the analysis function
+        numoffiles = nfiles(argv[2]);
         mapp = map(argv[2],analysis_space,sizeof(struct Analysis),act); //test map function
-        anal_cum = analysis_reduce(nfiles(argv[2]),analysis_space); //needs number of files
-        analysis_print(anal_cum, mapp, 0);
-
+        anal_cum = analysis_reduce(numoffiles,analysis_space);
+        analysis_print(anal_cum, mapp, 1);  //prints final
 
     }
-    //stats (just the final result)
+    //stats (JUST the final result)
     else if(test == 2)
     {
         act = stats;                              //set the pointer to point at the analysis function
