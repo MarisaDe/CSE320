@@ -59,7 +59,17 @@ int main(int argc, char** argv) {
         struct Analysis anal_cum;           //create an Analysis struct with garbage to use later
         act = analysis;                     //set the pointer to point at the analysis function
         numoffiles = nfiles(argv[2]);
+        if (numoffiles == -1)
+        {
+            printhelp();
+            return EXIT_FAILURE;
+        }
         mapp = map(argv[2],analysis_space,sizeof(struct Analysis),act); //test map function
+        if (mapp == -1)
+        {
+            printhelp();
+            return EXIT_FAILURE;
+        }
         anal_cum = analysis_reduce(numoffiles,analysis_space);
         analysis_print(anal_cum, mapp, 1);  //prints final
 
@@ -70,7 +80,17 @@ int main(int argc, char** argv) {
         struct Stats stats_cum;
         act = stats;                              //set the pointer to point at the stats function
         numoffiles = nfiles(argv[2]);
+        if (numoffiles == -1)
+        {
+            printhelp();
+            return EXIT_FAILURE;
+        }
         mapp = map(argv[2],stats_space,sizeof(struct Stats),act); //test map function
+        if (mapp == -1)
+        {
+            printhelp();
+            return EXIT_FAILURE;
+        }
         stats_cum = stats_reduce(numoffiles,stats_space);
         stats_print(stats_cum, 1);  //prints final
     }
@@ -80,12 +100,22 @@ int main(int argc, char** argv) {
         struct Analysis anal_cum;           //create an Analysis struct with garbage to use later
         act = analysis;                              //set the pointer to point at the analysis function
         numoffiles = nfiles(argv[3]);
+        if (numoffiles == -1)
+        {
+            printhelp();
+            return EXIT_FAILURE;
+        }
         mapp = map(argv[3],analysis_space,sizeof(struct Analysis),act); //test map function
+        if (mapp == -1)
+        {
+            printhelp();
+            return EXIT_FAILURE;
+        }
+
         anal_cum = analysis_reduce(numoffiles,analysis_space);
         
         for(i=0;i<numoffiles; i++)
         {
-             //printf("%i", analysis_space[i].lnno);
               analysis_print(analysis_space[i], 0, 0);
         }
         analysis_print(anal_cum, mapp, 1);  //prints final
@@ -96,7 +126,17 @@ int main(int argc, char** argv) {
         struct Stats stats_cum;
         act = stats;                              //set the pointer to point at the stats function
         numoffiles = nfiles(argv[3]);
+        if (numoffiles == -1)
+        {
+            printhelp();
+            return EXIT_FAILURE;
+        }
         mapp = map(argv[3],stats_space,sizeof(struct Stats),act); //test map function
+        if (mapp == -1)
+        {
+            printhelp();
+            return EXIT_FAILURE;
+        }
         stats_cum = stats_reduce(numoffiles,stats_space);
 
          for(i=0;i<numoffiles; i++)
@@ -107,7 +147,7 @@ int main(int argc, char** argv) {
         stats_print(stats_cum, 1);  //prints final
     } 
 
-    return EXIT_SUCCESS;  
+    return EXIT_FAILURE;  
 }
 
 

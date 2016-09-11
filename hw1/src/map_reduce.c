@@ -170,7 +170,7 @@ numfiles = nfiles(dir); //checks to see how many files are in the dir
 if(numfiles > 0)
 {
 	DIR *directory;			  //creates a directory pointer
-	char filepath[100];
+	char filepath[512];
 	directory = opendir(dir); //open the directory.
 
 	if(directory) //if directory is even valid
@@ -200,8 +200,8 @@ if(numfiles > 0)
 
 				//Step 4: perform some action and store result.
 				result = act(fp,results,direntry->d_name);
+				if(result == -1) return -1; 		//there was a failure somewhere when act was called.
 				sum += result;
-				//memcpy(results,result,size);		//fills memory in results with the result	
 				results += size;
 				fclose(fp);							//Step 5: close file
 			
@@ -589,7 +589,7 @@ int analysis(FILE* f, void* res, char* filename){
         pointres->ascii[(int)c]++;
         
 
-        if(c == '\n')
+        if(c == '\n')			//loop to find the newline char in order to count lines
         {
         	linenum++;
         	if(longlinecomp > longestline)
@@ -644,12 +644,15 @@ int stats(FILE* f, void* res, char* filename){
     		return -1;
     	}
     	//printf("%d", num );
-    	pointres->histogram[num]++; //update frequency of that number in the array
-    	n++;
-    	sum += num;
+    	if(num < NVAL)
+    	{
+    		pointres->histogram[num]++; //update frequency of that number in the array
+    		n++;
+    		sum += num;
+    	}
+    	else
+    		return -1;
     }
-	//printf("\n");
-
 	pointres->sum = sum;   //update sum of all numbers to the sum variable
 	pointres->n = n;	   //updates how many numbers are in the file
 	return 0;
