@@ -202,6 +202,7 @@ if(numfiles > 0)
 				result = act(fp,results,direntry->d_name);
 				sum += result;
 				//memcpy(results,result,size);		//fills memory in results with the result	
+				results += size;
 				fclose(fp);							//Step 5: close file
 			
 			}
@@ -383,7 +384,10 @@ void analysis_print(struct Analysis res, int nbytes, int hist)
 			}
 			
 		}
+
 	}
+	else printf("\n");
+
 
 }
 
@@ -572,12 +576,12 @@ int analysis(FILE* f, void* res, char* filename){
 	struct Analysis* pointres = (struct Analysis*) res;
 	//Create the initial state of the struct Analysis to return
 	//much of the code in cat can be used to calculate total number of bytes.
+	//puts frequencies of ASCII characters in the file.
 	char c;
 	int n = 0;
 	while((c = fgetc(f)) != EOF) {
         n++;
         pointres->ascii[(int)c]++;
-        //frequencies of ASCII characters in the file. Do this somehow. Also remove print statements later.
     }
 
     rewind(f);
@@ -597,16 +601,13 @@ int analysis(FILE* f, void* res, char* filename){
     				longestline = strlen(line);
     				linenum = linenumcomp;			
     			}
-   			//printf("Read Buffer: %s\n", line );
 
      	}
     //account for the newline char
     longestline--; 	
-    //printf("%s%d\n", "Longest line length: ", longestline);
     pointres->filename = filename;
     pointres->lnlen = longestline;
     pointres->lnno = linenum;
-    //printf("%s%d\n", "Longest line num: ", linenum);
     return n;
 
 }

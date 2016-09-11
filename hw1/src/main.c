@@ -28,7 +28,8 @@ int main(int argc, char** argv) {
     //initialize variables for later usage
     int (*act)(FILE*, void*, char*);    //create a function pointer 
     int mapp = 0;                       //initalize return value for map function call later.
-    //int numofbytes = 0;
+    int numoffiles = 0;
+    int i = 0;
     memset(analysis_space, 0, sizeof analysis_space);
     memset(stats_space, 0, sizeof stats_space);
     //struct Stats stats_cum;             //create a Stats struct with garbage to use later
@@ -69,14 +70,21 @@ int main(int argc, char** argv) {
         mapp = map(argv[2],stats_space,sizeof(struct Stats),act); //test map function
         //stats_cum = stats_reduce(mapp,stats_space);
     }
-    //-v ana (all + final result)
+    //-v ana (ALL + final result)
     else if(test == 3)
     {   
         struct Analysis anal_cum;           //create an Analysis struct with garbage to use later
         act = analysis;                              //set the pointer to point at the analysis function
+        numoffiles = nfiles(argv[3]);
         mapp = map(argv[3],analysis_space,sizeof(struct Analysis),act); //test map function
-        anal_cum = analysis_reduce(nfiles(argv[3]),analysis_space);
-        analysis_print(anal_cum, mapp, 1);
+        anal_cum = analysis_reduce(numoffiles,analysis_space);
+        
+         for(i=0;i<numoffiles; i++)
+         {
+             //printf("%i", analysis_space[i].lnno);
+             analysis_print(analysis_space[i], 0, 0);
+         }
+         analysis_print(anal_cum, mapp, 1);  //prints final
     }
     //-v stats (all + final result)
     else if(test == 4)
