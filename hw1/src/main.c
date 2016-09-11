@@ -93,9 +93,19 @@ int main(int argc, char** argv) {
     //-v stats (all + final result)
     else if(test == 4)
     {
-        act = stats;                              //set the pointer to point at the analysis function
+        struct Stats stats_cum;
+        act = stats;                              //set the pointer to point at the stats function
+        numoffiles = nfiles(argv[3]);
         mapp = map(argv[3],stats_space,sizeof(struct Stats),act); //test map function
-        //stats_cum = stats_reduce(mapp,stats_space);
+        stats_cum = stats_reduce(numoffiles,stats_space);
+
+         for(i=0;i<numoffiles; i++)
+         {
+             printf("%i", analysis_space[i].lnno);
+             stats_print(stats_space[i], 0);
+         }
+
+        stats_print(stats_cum, 1);  //prints final
     } 
 
     return EXIT_SUCCESS;  

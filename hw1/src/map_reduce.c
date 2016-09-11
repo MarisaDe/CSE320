@@ -553,7 +553,7 @@ void stats_print(Stats res, int hist)
 	printf("%s%f\n", "Q1: ", q1);
 	printf("%s%f\n", "Q3: ", q3);
 	printf("%s%d\n", "Min: ", min);
-	printf("%s%d\n", "Max: ", max);
+	printf("%s%d\n\n", "Max: ", max);
 
 
 }
