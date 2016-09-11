@@ -21,7 +21,7 @@ struct Analysis {
 typedef struct Stats {
   int histogram[NVAL]; //space to store the count for each number.
   int sum;             //the sum total of all the numbers in the file.
-  int n;               //the total count of numbers the files.
+  int n;               //the total count of numbers in the files.
   char* filename;      //the file corresponding to the struct.
                        //(don't print for final result)
 } Stats;

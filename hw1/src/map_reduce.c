@@ -418,7 +418,7 @@ void stats_print(Stats res, int hist)
 	q1found = -1;
 	q3found = -1;
 	min = -1;
-	max = 0;
+	max = -1;
 	medianfound = -1;
 	int isEven = 0;
 	double mean, median, q1, q3; 
@@ -633,11 +633,16 @@ int stats(FILE* f, void* res, char* filename){
 	int sum = 0;
     int num = 0;
     int n = 0;
+    int test;
 
 
     while(!feof(f))  //while end of file has not been reached
     {
-    	fscanf(f, "%d ",&num);
+    	test = fscanf(f, "%d ",&num);
+    	if(test == 0)
+    	{
+    		return -1;
+    	}
     	//printf("%d", num );
     	pointres->histogram[num]++; //update frequency of that number in the array
     	n++;
@@ -647,8 +652,6 @@ int stats(FILE* f, void* res, char* filename){
 
 	pointres->sum = sum;   //update sum of all numbers to the sum variable
 	pointres->n = n;	   //updates how many numbers are in the file
-
-
-	return -1;
+	return 0;
 }
 

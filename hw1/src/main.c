@@ -101,7 +101,6 @@ int main(int argc, char** argv) {
 
          for(i=0;i<numoffiles; i++)
          {
-             printf("%i", analysis_space[i].lnno);
              stats_print(stats_space[i], 0);
          }
 
