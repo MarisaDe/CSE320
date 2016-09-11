@@ -83,12 +83,12 @@ int main(int argc, char** argv) {
         mapp = map(argv[3],analysis_space,sizeof(struct Analysis),act); //test map function
         anal_cum = analysis_reduce(numoffiles,analysis_space);
         
-         for(i=0;i<numoffiles; i++)
-         {
+        for(i=0;i<numoffiles; i++)
+        {
              //printf("%i", analysis_space[i].lnno);
-             analysis_print(analysis_space[i], 0, 0);
-         }
-         analysis_print(anal_cum, mapp, 1);  //prints final
+              analysis_print(analysis_space[i], 0, 0);
+        }
+        analysis_print(anal_cum, mapp, 1);  //prints final
     }
     //-v stats (all + final result)
     else if(test == 4)

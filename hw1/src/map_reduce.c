@@ -580,35 +580,33 @@ int analysis(FILE* f, void* res, char* filename){
 	//puts frequencies of ASCII characters in the file.
 	char c;
 	int n = 0;
+	int linenum = 0;
+	int longlinenum = 0;
+	int longlinecomp = 0;
+	int longestline = 0;
 	while((c = fgetc(f)) != EOF) {
         n++;
         pointres->ascii[(int)c]++;
-    }
+        
 
-    rewind(f);
-    int longestline = 0;
-    int linenum = 0;
-    int linenumcomp = 0;
-    char line[1000];
+        if(c == '\n')
+        {
+        	linenum++;
+        	if(longlinecomp > longestline)
+        	{
+        		longestline = longlinecomp;
+        		longlinenum = linenum;
+        	}
 
-    //goes through each line in the file
-    	while (fgets(line, n, f) != NULL)
-    	{
-    		linenumcomp++;
-    		//gets longest line of the line farthest down in the file
-    		//gets longest line number
-    		if(strlen(line) > longestline || strlen(line) == longestline) 
-    			{
-    				longestline = strlen(line);
-    				linenum = linenumcomp;			
-    			}
+        	longlinecomp = 0;
+        	
+        }
 
-     	}
-    //account for the newline char
-    longestline--; 	
+        else longlinecomp++;
+    }	
     pointres->filename = filename;
     pointres->lnlen = longestline;
-    pointres->lnno = linenum;
+    pointres->lnno = longlinenum;
     return n;
 
 }
