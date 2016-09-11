@@ -13,7 +13,7 @@
 void printhelp(){
 	printf("Usage:  ./mapreduce [h|v] FUNC DIR\n");
 	printf("\t%.100s\n\t\t%.100s\n\t\t%.100s\n\t%.100s\n\t", "FUNC    Which operation you would like to run on the data:", "ana - Analysis of various text files in a directory.","stats - Calculates stats on files which contain only numbers.", "DIR     The directory in which the files are located.");
-	printf("%.100s\n\t%.100s\n\t%.100s\n\t", "Options:", "-h      Prints this help menu.","-v      Prints the map function’s results, stating the file it’s from.");
+	printf("%.100s\n\t%.100s\n\t%.100s\n\t\n", "Options:", "-h      Prints this help menu.","-v      Prints the map function’s results, stating the file it’s from.");
 }
 
 /**
@@ -30,20 +30,14 @@ void printhelp(){
 int validateargs(int argc, char** argv){
 
 // If no args are given (argc = 0)
-if(argc == 0 || argc == 1)
-{
-	printhelp();
-	return EXIT_FAILURE*-1; //return -1
-}
+if(argc == 0 || argc == 1) return -1; //return -1
 
 //index 0 MUST be ./mapreduce
-else if(strcmp(argv[0], "./mapreduce") == 0) {
+else 
+{
 
 	//check for -h
-	if(strcmp(argv[1], "-h") == 0){
-		printhelp();
-		return EXIT_SUCCESS; //return 0
-	}
+	if(strcmp(argv[1], "-h") == 0) return 0; //return 0
 
 	//for these we must check if the DIR is valid.
 	//first, check to see if a DIR arg was passed.
@@ -65,24 +59,20 @@ else if(strcmp(argv[0], "./mapreduce") == 0) {
 			else if(strcmp(argv[1], "stats") == 0) return 2;
 
 			//if the FUNC is wrong, print help and return fail.
-			else{
-				printhelp();
-				return EXIT_FAILURE*-1; //return -1
-			}	 
+			else return -1; //return -1
+	 
 		}
 
 		//else if DIR is invalid, print help and return failure.
-		else{
-			printhelp();
-			return EXIT_FAILURE*-1; //return -1
-		}
+		else return -1; //return -1
 	}
 
 	//DIR can only be in argv index 3 if -v IS used.	
 	else if(argc == 4){	
 
 		//-v must be in index 1 in this case!
-		if(strcmp(argv[1], "-v") == 0){
+		if(strcmp(argv[1], "-v") == 0)
+		{
 			//check to see if DIR is valid before checking FUNC
 			DIR* dir2 = opendir(argv[3]);   //assume input DIR is in index 3.
 		
@@ -92,29 +82,16 @@ else if(strcmp(argv[0], "./mapreduce") == 0) {
 				closedir(dir2);
 				if(strcmp(argv[2], "ana" ) == 0) return 3;	//-v ana returns 3
 				else if(strcmp(argv[2], "stats") == 0) return 4; //-v stats returns 4
-				//if the FUNC is wrong, print help and return failure.
-				else{ 
-				printhelp();
-				return EXIT_FAILURE*-1;
-				}
-			}
-			//DIR is invalid. Print help menu and return failure.
-			else{
-				printhelp();
-				return EXIT_FAILURE*-1; //return -1
-			}	
+				else return -1; // invalid input
+				
+			}			
+			else return -1; //return -1 //DIR is invalid. 
+				
 		}	
 	
 	}
-	else{
-		printhelp();
-		return EXIT_FAILURE*-1; //return -1
-	}
+	return -1; //return -1
 }
-//If it doesn't start with ./mapreduce it fails.
-printhelp();
-return EXIT_FAILURE*-1; //return -1
-
 }
 
 
@@ -222,9 +199,9 @@ if(numfiles > 0)
 				fp = fopen(filepath, "r"); 			//Step 3: open file
 
 				//Step 4: perform some action and store result.
-				result = (*act)(fp,results,direntry->d_name);
+				result = act(fp,results,direntry->d_name);
 				sum += result;
-				memset(results,result,size);		//fills memory in results with the result	
+				//memcpy(results,result,size);		//fills memory in results with the result	
 				fclose(fp);							//Step 5: close file
 			
 			}
@@ -316,25 +293,22 @@ Stats stats_reduce(int n, void* results)
 	memset(stats_final.histogram, 0, sizeof stats_final.histogram);
 
 	//create counter variables
-	int i = 0;
+	int i;
 	int histo_index = 0;
-	for(; i<n; i++)
+	for(i=0; i<n; i++)
 	{
 
 		//goes through every element in the histogram array of the struct and adds it to the histo_final
 		for(; histo_index<NVAL; histo_index++)
 		{
-
-			stats_final.histogram[histo_index] += iresults[i].histogram[histo_index];
-
+			stats_final.histogram[histo_index] += iresults[i].histogram[histo_index];	
 		}
 
 		histo_index = 0;	//resets the index to reference ascii[ascii] to 0.
 	
 		//update the sum and total count of nums in the files
-		stats_final.sum+=iresults[n].sum;
-		stats_final.n+=iresults[n].n;
-		//printf("%d\n",iresults[n].n);
+		stats_final.sum+=iresults[i].sum;
+		stats_final.n+=iresults[i].n;
 
 
 	}
@@ -595,13 +569,15 @@ void stats_print(Stats res, int hist)
 int analysis(FILE* f, void* res, char* filename){
 
 	//Cast the void pointer as a struct Analysis pointer
-	//res = (struct Analysis*) res;
+	struct Analysis* pointres = (struct Analysis*) res;
 	//Create the initial state of the struct Analysis to return
 	//much of the code in cat can be used to calculate total number of bytes.
 	char c;
-	int n;
+	int n = 0;
 	while((c = fgetc(f)) != EOF) {
         n++;
+        pointres->ascii[(int)c]++;
+        //frequencies of ASCII characters in the file. Do this somehow. Also remove print statements later.
     }
 
     rewind(f);
@@ -621,13 +597,35 @@ int analysis(FILE* f, void* res, char* filename){
     				longestline = strlen(line);
     				linenum = linenumcomp;			
     			}
-   			printf("Read Buffer: %s\n", line );
+   			//printf("Read Buffer: %s\n", line );
 
      	}
-
-    printf("%s%d\n", "Longest line length: ", longestline);
-    printf("%s%d\n", "Longest line num: ", linenum);
+    //account for the newline char
+    longestline--; 	
+    //printf("%s%d\n", "Longest line length: ", longestline);
+    pointres->filename = filename;
+    pointres->lnlen = longestline;
+    pointres->lnno = linenum;
+    //printf("%s%d\n", "Longest line num: ", linenum);
     return n;
 
+}
+
+
+/**
+ * This function counts the number of occurrences of each number in a file. It
+ * also calculates the sum total of all numbers in the file and how many numbers
+ * are in the file. If the file has an invalid entry return -1.
+ *
+ * @param  f        The filestream on which the action will be performed. You
+ *                  you can assume the filestream passed by map will be valid.
+ * @param  res      The slot in the results array in which the data will be
+ *                  stored.
+ * @param  filename The filename of the file currently being processed.
+ * @return          Return 0 on success and -1 on failure.
+ */
+int stats(FILE* f, void* res, char* filename){
+
+	return -1;
 }
 
