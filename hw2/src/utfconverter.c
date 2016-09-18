@@ -102,7 +102,7 @@ endianness source;
 }
 
 void print_help() {
-	for(int i = 0; i < 4; i++){
+	for(int i = 0; i < 5; i++){
 		printf("%s", USAGE[i]); 
 	}
 	quit_converter(NO_FD);

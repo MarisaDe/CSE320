@@ -11,7 +11,7 @@ make_folders:
 	mkdir $(FOLDERS)
 
 execute: utfconverter
-	gcc ./build/** -o ./bin/utfconverter
+	gcc ./build/** -o ./bin/utf
 
 utfconverter:
 	gcc -c $(ISRC)$@.c -I include -o ./build/$@.o
