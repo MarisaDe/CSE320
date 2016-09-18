@@ -1,17 +1,23 @@
-CC = gcc
-SRC = $(wildcard src/*.c)
-INCLUDE = $(wildcard include/)
+IDIR =./include/
+ISRC = ./src/
+DEP = -I$(IDIR)
 BIN = utfconverter
 CFLAGS = -g -Wall -Werror -pedantic -Wextra 
-REQ = $(SRC) $(wildcard include/*.h)
+FOLDERS = build bin
 
-all: $(BIN)
+all: clean make_folders execute
 
-$(BIN): $(REQ)
-	$(CC) $(CFLAGS) -I $(INCLUDE) $(SRC) -o $(BIN)
+make_folders:
+	mkdir $(FOLDERS)
+
+execute: utfconverter
+	gcc ./build/** -o ./bin/utfconverter
+
+utfconverter:
+	gcc -c $(ISRC)$@.c -I include -o ./build/$@.o
 
 .PHONY: clean
 
 clean:
-	rm -f *.o $(BIN)
+	rm -rf $(FOLDERS)
 
