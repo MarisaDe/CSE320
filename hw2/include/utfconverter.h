@@ -40,7 +40,7 @@ extern char* filename;
 /** The usage statement. */
 const char* USAGE[5] = { 
 "Command line utility for converting files from UTF-16LE to UTF-16BE or vice versa.\n\n",
-"Usage: ./utf [-h] -u OUT_ENC IN_FILE\n\n",
+"Usage:  ./utf [-h] -u OUT_ENC IN_FILE\n\n",
 "    Option arguments:\n\t-h\t\tDisplays this usage.\n\n",
 "    Mandatory argument:\n\t-u OUT_ENC\tSets the output encoding.\n\t\t\tValid values for OUT_ENC: 16LE, 16BE\n\n"
 "    Positional Arguments:\n\tIN_FILE\t\tThe file to convert.\n",
