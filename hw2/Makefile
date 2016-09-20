@@ -16,6 +16,11 @@ execute: utfconverter
 utfconverter:
 	gcc -c $(ISRC)$@.c -I include -o ./build/$@.o
 
+debug: 
+	gcc -g $(ISRC)utfconverter.c -I include -o ./build/utfconverter.o
+	gdb ./build/utfconverter.o
+
+
 .PHONY: clean
 
 clean:

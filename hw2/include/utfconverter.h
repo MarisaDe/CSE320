@@ -13,10 +13,12 @@
 #define NO_FD -1
 #define OFFSET 4
 
-#define FIRST  10000000
-#define SECOND 20000000
-#define THIRD  30000000
-#define FOURTH 40000000
+#define FIRST  0
+#define SECOND 1
+#define THIRD  2
+#define FOURTH 3
+
+/* 40000000*/
 
 #ifdef __STDC__
 #define P(x) x
@@ -69,10 +71,10 @@ Glyph* swap_endianness(Glyph*);
  * @param data[2]	The array of data to fill the glyph struct with.
  * @param end	   	The endianness enum of the glyph.
  * @param fd 		The int pointer to the file descriptor of the input 
- * 			file.
+ * 			        file.
  * @return Returns a pointer to the filled-in glyph.
  */
-Glyph* fill_glyph(Glyph*, unsigned int, endianness, int*);
+Glyph* fill_glyph(Glyph* glyph, unsigned int data[2], endianness end, int* fd);
 
 /**
  * Writes the given glyph's contents to stdout.
