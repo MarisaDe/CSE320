@@ -27,37 +27,49 @@ Glyph* fill_glyph(Glyph* glyph,unsigned int data[2],endianness end, int* fd)
  	printf("%s%x\n", "second data :",data[1]);
 
  	unsigned int bits = 0; 
- 	bits |= (data[0] + (data[1] << 10));
- 	printf("%s%x\n", "first: ",bits);
+ 	/*Creates the code point*/
+ 	if(end == BIG)
+ 	{
+ 		bits |= (data[0] + (data[1] << 8));
+ 		printf("%s%x\n", "combined w/ BE: ",bits);
+ 	}
+ 	else if(end == LITTLE)
+ 	{
+ 		bits |= ((data[0]<<8) + data[1]);
+ 		printf("%s%x\n", "combined w/ LE: ",bits);
+ 	}
 // 	/* Check high surrogate pair using its special value range.*/
-// 	if(bits > 0x000F && bits < 0xF8FF)
-// 	{ 
-// 		if(read(*fd, &data[SECOND], 1) == 1 && read(*fd, &(&data[FIRST]), 1) == 1)
-// 		{
-// 			bits = '0'; /* bits |= (bytes[FIRST] + (bytes[SECOND] << 8)) */
-// 			if(bits > 0xDAAF && bits < 0x00FF)
-//			{ /* Check low surrogate pair.*/
-// 				glyph->surrogate = false; 
-// 			}
-// 			else 
-// 			{
-// 				lseek(*fd, -OFFSET, SEEK_CUR); 
-// 				glyph->surrogate = true;
-// 			}
-// 		}
-// 	}
-// 	if(!glyph->surrogate){
-// 		glyph->bytes[THIRD] = glyph->bytes[FOURTH] |= 0;
-// 	} 
- 	// else 
- 	// {
- 	// 	glyph->bytes[THIRD] = data[FIRST]; 
- 	// 	glyph->bytes[FOURTH] = data[SECOND];
- 	// }
- 	// glyph->end = end;
+//  	if(bits > 0x000F && bits < 0xF8FF)
+//  	{ 
+//  		if(read(*fd, &data[SECOND], 1) == 1 && read(*fd, &data[FIRST], 1) == 1)
+//  		{
+//  			bits = '0'; /* bits |= (bytes[0] + (bytes[1] << 8)) */
+//  			if(bits > 0xDAAF && bits < 0x00FF)
+// 			{ /* Check low surrogate pair.*/
+//  				glyph->surrogate = false; 
+//  				printf("%s\n", "No surrogate pair");
+//  			}
+//  			else 
+//  			{
+//  				lseek(*fd, -OFFSET, SEEK_CUR); 
+//  				glyph->surrogate = true;
+//  				printf("%s\n", "Surrogate pair found!");
+//  			}
+//  		}
+//  	}
+//  	if(!glyph->surrogate)
+//  	{
+//  		glyph->bytes[THIRD] = glyph->bytes[FOURTH] |= 0;
+//  	} 
+//  	 else 
+//  	{
+//  	 	glyph->bytes[THIRD] = data[FIRST]; 
+//  	 	glyph->bytes[FOURTH] = data[SECOND];
+//  	}
+  	glyph->end = end;
 
- 	return glyph;
-}
+  	return glyph;
+ }
 
 // void write_glyph(Glyph* glyph)
 // {
@@ -166,14 +178,14 @@ int main(int argc, char** argv)
 	{ 
 		if(buf[0]== 0xff && buf[1] == 0xfe)
 		{
-			//file is big endian so BIG is 1, sets source to 1.
-			source = BIG; 
+			/*file is little endian FFFE*/
+			source = LITTLE; 
 			printf("%d", source);
  		} 
 		else if(buf[0] == 0xfe && buf[1] == 0xff)
 		{
-// 			/*file is little endian*/
- 			source = LITTLE;
+// 			/*file is big endian FEFF*/
+ 			source = BIG;
  			printf("%d", source);
  		} 
 			
