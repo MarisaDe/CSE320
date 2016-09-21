@@ -18,8 +18,6 @@
 #define THIRD  2
 #define FOURTH 3
 
-/* 40000000*/
-
 #ifdef __STDC__
 #define P(x) x
 #else
