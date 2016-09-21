@@ -32,6 +32,8 @@ Glyph* fill_glyph(Glyph* glyph,unsigned int data[2],endianness end, int* fd)
  	if(end == BIG)
  	{
  		bits |= (data[0] + (data[1] << 8));
+ 		glyph->bytes[0] = data[1];
+ 		glyph->bytes[1] = data[0];
  		printf("%s%x\n", "combined w/ BE: ",bits);
  		//glyph->bytes[0] = bits;
  		//glyph->bytes[1] = bits >> 2;
@@ -117,8 +119,8 @@ void write_glyph(Glyph* glyph)
  {
  	int option_index, c;
  	option_index = 0;
- 	filename = NULL;
- 	char* endian_convert = NULL;
+ 	char* endian_convert = malloc(sizeof(endian_convert));
+ 	filename = malloc(sizeof(argv[optind+1]));
  	//#include "struct.txt" 
 	struct option long_options[] = 
 	{
@@ -147,11 +149,11 @@ void write_glyph(Glyph* glyph)
  		}
 
  	}
+ 	printf("%s\n",endian_convert);
 
  	/*optind must be less than all args AND there must be two more parameters after -u. (endianness and filename)*/
  	if(optind < argc && argc-optind != 1)
  	{
- 		filename = malloc(sizeof(argv[optind+1]));
  		strcpy(filename, argv[optind+1]);
  	} 
  	else 
@@ -167,11 +169,11 @@ void write_glyph(Glyph* glyph)
  		print_help();
  	}
 
- 	if(strcmp(endian_convert, "16LE"))
+ 	if(strcmp(endian_convert, "16LE") == 0)
  	{ 
  		conversion = LITTLE;
  	} 
- 	else if(strcmp(endian_convert, "16BE"))
+ 	else if(strcmp(endian_convert, "16BE") == 0)
  	{
  		conversion = BIG;
  	} 
@@ -222,13 +224,11 @@ int main(int argc, char** argv)
 		{
 			/*file is little endian FFFE*/
 			source = LITTLE; 
-			printf("%d", source);
  		} 
 		else if(buf[0] == 0xfe && buf[1] == 0xff)
 		{
 // 			/*file is big endian FEFF*/
  			source = BIG;
- 			printf("%d", source);
  		} 
 			
 		else {
@@ -250,12 +250,11 @@ int main(int argc, char** argv)
 
  		}
 	}
-	printf("%s\n", "I got here");
 
 // 	Now deal with the rest of the bytes.
  	while((rv = read(fd, &buf[0], 1)) == 1 &&  (rv = read(fd, &buf[1], 1)) == 1)
 	{
- 		write_glyph(fill_glyph(glyph, buf, source, &fd));
+ 		write_glyph(fill_glyph(glyph, buf, conversion, &fd));
 // 		void* memset_return = memset(glyph, 0, sizeof(Glyph)+1);
 // 	        /* Memory write failed, recover from it: */
 // 	        if(memset_return == NULL){
