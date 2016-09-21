@@ -9,7 +9,7 @@
 
 #define MAX_BYTES 2
 #define SURROGATE_SIZE 2
-#define NON_SURROGATE_SIZE 1
+#define NON_SURROGATE_SIZE 2
 #define NO_FD -1
 #define OFFSET 4
 

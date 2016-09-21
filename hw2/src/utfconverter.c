@@ -107,9 +107,9 @@ Glyph* fill_glyph(Glyph* glyph,unsigned int data[2],endianness end, int* fd)
 void write_glyph(Glyph* glyph)
  {
  	if(glyph->surrogate){
- 		write(STDIN_FILENO, glyph->bytes, SURROGATE_SIZE);
+ 		write(STDOUT_FILENO, glyph->bytes, SURROGATE_SIZE);
  	} else {
- 		write(STDIN_FILENO, glyph->bytes, NON_SURROGATE_SIZE);
+ 		write(STDOUT_FILENO, glyph->bytes, NON_SURROGATE_SIZE);
  	}
  }
 
@@ -207,70 +207,68 @@ int main(int argc, char** argv)
 {
 	/* After calling parse_args(), filename and conversion should be set. */
 	parse_args(argc, argv);
-	//print_help();
+	int fd = open(filename, O_RDONLY); 
+	/*rv is for read */
+	int rv = 0;
+	unsigned int buf[2] = {0,0};
 
-// 	int fd = open("rsrc/utf16le.txt", O_RDONLY); 
-// 	/*rv is for read */
-// 	int rv = 0;
-// 	unsigned int buf[2] = {0,0};
+	Glyph* glyph = malloc(sizeof(Glyph)); 
 
-// 	Glyph* glyph = malloc(sizeof(Glyph)); 
-
-// 	/* Handle BOM bytes for UTF16 specially. 
-//     * Read our values into the first and second elements. */
-// 	if((rv = read(fd, &buf[0], 1)) == 1 &&  (rv = read(fd, &buf[1], 1)) == 1)
-// 	{ 
-// 		if(buf[0]== 0xff && buf[1] == 0xfe)
-// 		{
-// 			/*file is little endian FFFE*/
-// 			source = LITTLE; 
-// 			printf("%d", source);
-//  		} 
-// 		else if(buf[0] == 0xfe && buf[1] == 0xff)
-// 		{
-// // 			/*file is big endian FEFF*/
-//  			source = BIG;
-//  			printf("%d", source);
-//  		} 
+	/* Handle BOM bytes for UTF16 specially. 
+    * Read our values into the first and second elements. */
+	if((rv = read(fd, &buf[0], 1)) == 1 &&  (rv = read(fd, &buf[1], 1)) == 1)
+	{ 
+		if(buf[0]== 0xff && buf[1] == 0xfe)
+		{
+			/*file is little endian FFFE*/
+			source = LITTLE; 
+			printf("%d", source);
+ 		} 
+		else if(buf[0] == 0xfe && buf[1] == 0xff)
+		{
+// 			/*file is big endian FEFF*/
+ 			source = BIG;
+ 			printf("%d", source);
+ 		} 
 			
-// 		else {
-// // 			/*file has no BOM*/
-//  			free(&glyph->bytes); 
-//  			fprintf(stderr, "File has no BOM.\n");
-//  			quit_converter(NO_FD); 
-//  		}
-//  		void* memset_return = memset(glyph, 0, sizeof(Glyph)+1);
-//  		/* Memory write failed, recover from it: */
-//  		if(memset_return == NULL)
-//  		{
-//  			 tweak write permission on heap memory. 
-//  			asm("movl $8, %esi\n\t"
-//  			    "movl $.LC0, %edi\n\t"
-//  			    "movl $0, %eax");
-//  			/* Now make the request again. */
-//  			memset(glyph, 0, sizeof(Glyph)+1);
+		else {
+// 			/*file has no BOM*/
+ 			free(&glyph->bytes); 
+ 			fprintf(stderr, "File has no BOM.\n");
+ 			quit_converter(NO_FD); 
+ 		}
+ 		void* memset_return = memset(glyph, 0, sizeof(Glyph)+1);
+ 		/* Memory write failed, recover from it: */
+ 		if(memset_return == NULL)
+ 		{
+ 			/* tweak write permission on heap memory. */
+ 			asm("movl $8, %esi\n\t"
+ 			    "movl $.LC0, %edi\n\t"
+ 			    "movl $0, %eax");
+ 			/* Now make the request again. */
+ 			memset(glyph, 0, sizeof(Glyph)+1);
 
-//  		}
-// 	}
-// 	printf("%s\n", "I got here");
+ 		}
+	}
+	printf("%s\n", "I got here");
 
-// // 	Now deal with the rest of the bytes.
-//  	while((rv = read(fd, &buf[0], 1)) == 1 &&  (rv = read(fd, &buf[1], 1)) == 1)
-// 	{
-//  		write_glyph(fill_glyph(glyph, buf, source, &fd));
-// // 		void* memset_return = memset(glyph, 0, sizeof(Glyph)+1);
-// // 	        /* Memory write failed, recover from it: */
-// // 	        if(memset_return == NULL){
-// // 		        /* tweak write permission on heap memory. */
-// // 		        asm("movl $8, %esi\n\t"
-// // 		            "movl $.LC0, %edi\n\t"
-// // 		            "movl $0, %eax");
-// // 		        /* Now make the request again. */
-// // 		        memset(glyph, 0, sizeof(Glyph)+1);
-// // 	        }
-//  	}
+// 	Now deal with the rest of the bytes.
+ 	while((rv = read(fd, &buf[0], 1)) == 1 &&  (rv = read(fd, &buf[1], 1)) == 1)
+	{
+ 		write_glyph(fill_glyph(glyph, buf, source, &fd));
+// 		void* memset_return = memset(glyph, 0, sizeof(Glyph)+1);
+// 	        /* Memory write failed, recover from it: */
+// 	        if(memset_return == NULL){
+// 		        /* tweak write permission on heap memory. */
+// 		        asm("movl $8, %esi\n\t"
+// 		            "movl $.LC0, %edi\n\t"
+// 		            "movl $0, %eax");
+// 		        /* Now make the request again. */
+// 		        memset(glyph, 0, sizeof(Glyph)+1);
+// 	        }
+ 	}
 
 
-// 	quit_converter(NO_FD);
-// 	return 0;
+	quit_converter(NO_FD);
+	return 0;
 }
