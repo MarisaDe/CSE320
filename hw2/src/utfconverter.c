@@ -245,6 +245,7 @@ int main(int argc, char** argv)
  			fprintf(stderr, "File has no BOM.\n");
  			print_help();
  			quit_converter(NO_FD); 
+ 			return EXIT_FAILURE;
  		}
  		void* memset_return = memset(glyph, 0, sizeof(Glyph)+1);
  		/* Memory write failed, recover from it: */
