@@ -157,10 +157,10 @@ void write_glyph(Glyph* glyph)
  	} 
  	else 
  	{
+ 		
  		fprintf(stderr, "Invalid OUT_ENC argument.\n");
  		print_help();
  	}
-
 
  	/*optind must be less than all args AND there must be two more parameters after -u. (endianness and filename)*/
  	if(optind < argc)
@@ -171,7 +171,9 @@ void write_glyph(Glyph* glyph)
  	{
  		fprintf(stderr, "Filename not given.\n");
  		print_help();
- 		quit_converter(NO_FD); 	}
+ 		quit_converter(NO_FD); 
+ 	}
+
  	return;
 }
 
@@ -191,7 +193,7 @@ void quit_converter(int fd)
 	close(STDOUT_FILENO);
 	if(fd != NO_FD)
 		close(fd);
-	exit(0);
+	EXIT_FAILURE;
 	/* Ensure that the file is included regardless of where we start compiling from. */
 }
 
@@ -214,7 +216,6 @@ int main(int argc, char** argv)
 	{
 		fprintf(stderr, "Not a valid filename.\n");
 		print_help();
-		return EXIT_FAILURE;
 	}
 
 	int rv = 0;
@@ -294,6 +295,11 @@ int main(int argc, char** argv)
  		}
  	}
 
-	quit_converter(NO_FD);
-	return 0;
+ 	free(glyph);
+ 	free(filename);
+	close(STDERR_FILENO);
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	if(fd != NO_FD) close(fd);
+	return EXIT_SUCCESS;
 }
