@@ -14,10 +14,10 @@ execute: utfconverter
 	gcc ./build/** -o ./bin/utf
 
 utfconverter:
-	gcc -c $(ISRC)$@.c -I include -o ./build/$@.o
+	gcc -c $(CFLAGS) $(ISRC)$@.c -I include -o ./build/$@.o
 
 debug: 
-	gcc -g $(ISRC)utfconverter.c -I include -o ./build/utfconverter.o
+	gcc -g $(CFLAGS) $(ISRC)utfconverter.c -I include -o ./build/utfconverter.o
 	gdb ./build/utfconverter.o
 
 

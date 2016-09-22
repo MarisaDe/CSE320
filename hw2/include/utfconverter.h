@@ -72,7 +72,7 @@ Glyph* swap_endianness(Glyph* glyph);
  * 			        file.
  * @return Returns a pointer to the filled-in glyph.
  */
-Glyph* fill_glyph(Glyph* glyph, unsigned int data[2], endianness end, int* fd);
+Glyph* fill_glyph(Glyph* glyph, unsigned int data[2], endianness end);
 
 /**
  * Writes the given glyph's contents to stdout.
