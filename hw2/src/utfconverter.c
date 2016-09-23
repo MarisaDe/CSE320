@@ -144,70 +144,33 @@ void write_glyph(Glyph* glyph)
  		}
 
  	}
-
+if(verbose > 3) verbose = 2;
 return;
 }
 
-/*
 
- 	if(argc > 1 && strcmp(argv[1],"-h") !=0 && strcmp(argv[1],"-u") !=0)
- 	{
- 		print_help();
- 	}
+void verbose1()
+{
+	struct utsname info;
+	uname(&info);
+	struct stat *buf;
+	buf = malloc(sizeof(struct stat));
+	stat(filename, buf);
+	double kb = 0.0;
+	kb = ((double)(buf->st_size)) /1000;
 
- 	if((c = getopt(argc, argv, "hu:")) != -1)
-	{
-		switch(c){ 
- 			case 'h':
- 				print_help();
- 				break;
- 			case 'u':
- 				endian_convert = argv[optind-1];
- 				break;
- 			default:
- 				fprintf(stderr, "Unrecognized argument.\n");
- 				print_help();
- 		}
- 	}
- 	else {
- 			fprintf(stderr, "Invalid argument.\n");
- 			print_help();
- 	}
+	printf("%s%f%s\n","   Input file size: ",kb, " kb");
+	printf("%s","   Input file path: \n");
+	if(source == LITTLE) 	printf("%s","   Input file encoding: UTF-16LE\n");
+	else if(source == BIG) 	printf("%s","   Input file encoding: UTF-16BE\n");
+	if(conversion == LITTLE) 	printf("%s","   Output encoding: UTF-16LE\n");
+	else if(conversion == BIG)	printf("%s","   Output encoding: UTF-16BE\n");
 
-if(endian_convert == NULL)
- 	{
- 		fprintf(stderr, "OUT_ENC not given.\n");
- 		print_help();
- 	}
-
- 	if(strcmp(endian_convert, "16LE") == 0)
- 	{ 
- 		conversion = LITTLE;
- 	} 
- 	else if(strcmp(endian_convert, "16BE") == 0)
- 	{
- 		conversion = BIG;
- 	} 
- 	else 
- 	{
- 	    fprintf(stderr, "Invalid OUT_ENC argument.\n");
- 		print_help();
- 	}
-
- 	optind must be less than all args AND there must be two more parameters after -u. (endianness and filename)
- 	if(optind < argc)
- 	{
- 		strcpy(filename, argv[optind]);
- 	} 
- 	else 
- 	{
- 		fprintf(stderr, "Filename not given.\n");
- 		print_help();
- 		quit_converter(NO_FD); 
- 	}
-
- 	return;
-}*/
+	printf("%s%s\n","   Hostmachine: ", info.machine);
+	printf("%s","   Operating System: ");
+	printf("%s\n",info.sysname);
+	free(buf);
+}
 
 void print_help() {
 	int i;
@@ -234,7 +197,6 @@ int main(int argc, char** argv)
 	/*After calling parse_args(), filename and conversion should be set.*/
 	filename = calloc(strlen(argv[argc-1])+1,sizeof(char));
 	parse_args(argc, argv);
-	printf("%i\n",verbose);
 	/*Check to see if valid filename has a / in front. MUST REMOVE OTHERWISE WONT WORK!*/
 	/*if(filename[0] == '/')
 	{
@@ -253,6 +215,9 @@ int main(int argc, char** argv)
  		free(filename);
 		print_help();
 	}
+
+	/*Print the info for verbosity level 1.*/
+	if(verbose ==1) verbose1();
 
 	unsigned int buf[2] = {0,0};
 

@@ -5,6 +5,8 @@
 #include <getopt.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/utsname.h>
+#include <sys/stat.h>
 
 
 #define MAX_BYTES 2
@@ -93,6 +95,11 @@ void parse_args(int argc, char** argv);
  * Prints the usage statement.
  */
 void print_help();
+
+/**
+ * Prints info. for verbosity level 1.
+ */
+void verbose1();
 
 /**
  * Closes file descriptors and frees list and possibly does other
