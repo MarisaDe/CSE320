@@ -3,6 +3,7 @@
 char* filename;
 endianness source;
 endianness conversion;
+bool fileset = false;
 
  Glyph* swap_endianness(Glyph* glyph)
  {
@@ -77,9 +78,73 @@ void write_glyph(Glyph* glyph)
  void parse_args(int argc, char** argv)
  {
  	int c;
- 	/*option_index = 0;*/
+ 	int option_index = 0;
  	char* endian_convert;
- 	filename = calloc(strlen(argv[argc-1])+1,sizeof(char));
+
+ 	struct option long_options[] = 
+	{
+		{"help", no_argument, NULL, 'h'},
+		{"UTF", required_argument, NULL, 'u'},
+		{"v", required_argument, NULL, 'v'},
+
+	};
+
+	/*If getopt() returns with a valid (its working correctly)  return code, then process the args! */
+ 	if((c = getopt_long(argc, argv, "hu:", long_options, &option_index)) != -1)
+ 	{
+ 		switch(c){ 
+ 			case 'h':
+ 				print_help();
+ 				quit_converter(NO_FD);
+ 				break;
+ 			case 'u':
+ 				endian_convert = optarg;
+ 				if(endian_convert == NULL)
+ 				{
+ 					fprintf(stderr, "OUT_ENC not given.\n");
+ 					print_help();
+ 				}
+
+ 				else if(strcmp(endian_convert, "16LE") == 0)
+ 				{ 
+ 					conversion = LITTLE;
+ 				} 
+ 				else if(strcmp(endian_convert, "16BE") == 0)
+ 				{
+ 					conversion = BIG;
+ 				} 
+ 				else
+ 				{		
+ 					fprintf(stderr, "Invalid OUT_ENC argument.\n");
+ 					print_help();
+ 				}
+ 				if(optind < argc) 
+ 				{
+ 					strcpy(filename, argv[optind]);
+ 					fileset = true;
+ 				}
+ 				else 
+ 				{	
+ 					fprintf(stderr, "Filename not given.\n");
+ 					free(filename);
+ 					print_help();
+ 					quit_converter(NO_FD); 
+ 				}
+
+ 				break;
+ 			default:
+ 				fprintf(stderr, "Unrecognized argument.\n");
+ 				quit_converter(NO_FD);
+ 				break;
+ 		}
+
+ 	}
+
+return;
+}
+
+
+/*
 
  	if(argc > 1 && strcmp(argv[1],"-h") !=0 && strcmp(argv[1],"-u") !=0)
  	{
@@ -125,7 +190,7 @@ if(endian_convert == NULL)
  		print_help();
  	}
 
- 	/*optind must be less than all args AND there must be two more parameters after -u. (endianness and filename)*/
+ 	optind must be less than all args AND there must be two more parameters after -u. (endianness and filename)
  	if(optind < argc)
  	{
  		strcpy(filename, argv[optind]);
@@ -138,9 +203,7 @@ if(endian_convert == NULL)
  	}
 
  	return;
-}
-
-
+}*/
 
 void print_help() {
 	int i;
@@ -152,7 +215,7 @@ void print_help() {
 
 void quit_converter(int fd)
 {
-	free(filename);
+	//free(filename);
 	close(STDERR_FILENO);
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
@@ -165,6 +228,7 @@ void quit_converter(int fd)
 int main(int argc, char** argv)
 {
 	/*After calling parse_args(), filename and conversion should be set.*/
+	filename = calloc(strlen(argv[argc-1])+1,sizeof(char));
 	parse_args(argc, argv);
 	/*Check to see if valid filename has a / in front. MUST REMOVE OTHERWISE WONT WORK!*/
 	/*if(filename[0] == '/')
@@ -180,7 +244,8 @@ int main(int argc, char** argv)
 
 	if(fd < 0)
 	{
-		fprintf(stderr, "Not a valid filename.\n");
+		fprintf(stderr, "Not a valid filename.\n"); 
+ 		free(filename);
 		print_help();
 	}
 
@@ -192,7 +257,7 @@ int main(int argc, char** argv)
     /* Read our values into the first and second elements.*/
 	if((rv = read(fd, &buf[0], 1)) == 1 &&  (rv = read(fd, &buf[1], 1)) == 1)
 	{ 
-		if(buf[0]== 0xff000000 && buf[1] == 0xfe000000)
+		if(buf[0]== 0xff && buf[1] == 0xfe)
 		{
 			/*file is little endian FFFE*/
 			source = LITTLE; 
@@ -206,12 +271,12 @@ int main(int argc, char** argv)
 		else {
  			/*file has no BOM*/
  			free(&glyph->bytes); 
+ 			free(filename);
  			fprintf(stderr, "File has no BOM.\n");
  			print_help();
  			quit_converter(NO_FD); 
- 			return EXIT_FAILURE;
  		}
- 		void* memset_return = memset(glyph, 0, sizeof(Glyph)+1);
+ 		void* memset_return = memset(glyph, 0, sizeof(Glyph));
  		/*Memory write failed, recover from it:*/
  		if(memset_return == NULL)
  		{
@@ -220,7 +285,7 @@ int main(int argc, char** argv)
  			    "movl $.LC0, %edi\n\t"
  			    "movl $0, %eax");
  			Now make the request again.*/
- 			memset(glyph, 0, sizeof(Glyph)+1);
+ 			memset(glyph, 0, sizeof(Glyph));
 
  		}
 	}
