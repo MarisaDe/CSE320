@@ -3,7 +3,7 @@
 char* filename;
 endianness source;
 endianness conversion;
-bool fileset = false;
+int verbose;
 
  Glyph* swap_endianness(Glyph* glyph)
  {
@@ -77,26 +77,32 @@ void write_glyph(Glyph* glyph)
 
  void parse_args(int argc, char** argv)
  {
+ 	verbose = 0;
  	int c;
  	int option_index = 0;
  	char* endian_convert;
 
  	struct option long_options[] = 
 	{
-		{"help", no_argument, NULL, 'h'},
-		{"UTF", required_argument, NULL, 'u'},
-		{"v", required_argument, NULL, 'v'},
+		{"help", no_argument, 0, 'h'},
+		{"UTF", required_argument, 0, 'u'},
+		{"v", no_argument, 0, 'v'},
+		{0, 0, 0, 0},
 
 	};
 
 	/*If getopt() returns with a valid (its working correctly)  return code, then process the args! */
- 	if((c = getopt_long(argc, argv, "hu:", long_options, &option_index)) != -1)
+ 	while((c = getopt_long(argc, argv, "hvu:", long_options, &option_index)) != -1)
  	{
  		switch(c){ 
  			case 'h':
  				print_help();
  				quit_converter(NO_FD);
  				break;
+ 			case 'v':
+ 			    verbose++;
+ 				break;
+
  			case 'u':
  				endian_convert = optarg;
  				if(endian_convert == NULL)
@@ -121,7 +127,6 @@ void write_glyph(Glyph* glyph)
  				if(optind < argc) 
  				{
  					strcpy(filename, argv[optind]);
- 					fileset = true;
  				}
  				else 
  				{	
@@ -142,7 +147,6 @@ void write_glyph(Glyph* glyph)
 
 return;
 }
-
 
 /*
 
@@ -230,6 +234,7 @@ int main(int argc, char** argv)
 	/*After calling parse_args(), filename and conversion should be set.*/
 	filename = calloc(strlen(argv[argc-1])+1,sizeof(char));
 	parse_args(argc, argv);
+	printf("%i\n",verbose);
 	/*Check to see if valid filename has a / in front. MUST REMOVE OTHERWISE WONT WORK!*/
 	/*if(filename[0] == '/')
 	{
