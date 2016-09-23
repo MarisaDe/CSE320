@@ -68,11 +68,10 @@ Glyph* swap_endianness(Glyph* glyph);
  * @param glyph 	The pointer to the glyph struct to fill in with bytes.
  * @param data[2]	The array of data to fill the glyph struct with.
  * @param end	   	The endianness enum of the glyph.
- * @param fd 		The int pointer to the file descriptor of the input 
- * 			        file.
+ * 
  * @return Returns a pointer to the filled-in glyph.
  */
-Glyph* fill_glyph(Glyph* glyph, unsigned int data[2], endianness end, int* fd);
+Glyph* fill_glyph(Glyph* glyph, unsigned int data[2], endianness end);
 
 /**
  * Writes the given glyph's contents to stdout.
