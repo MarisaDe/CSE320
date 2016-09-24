@@ -42,11 +42,10 @@ typedef struct Glyph {
 extern char* filename;
 
 /** The usage statement. */
-const char* USAGE[5] = { 
-"Command line utility for converting UTF files to and from UTF-8, UTF-16LE and UTF-16BE.\n\n",
-"Usage:  ./utf [-h|--help] -u OUT_ENC | --UTF=OUT_ENC IN_FILE [OUT_FILE]\n\n",
+const char* USAGE[4] = {
+"./utf [-h|--help] [-v|-vv] -u OUT_ENC | --UTF=OUT_ENC IN_FILE [OUT_FILE]\n\n",
 "    Option arguments:\n\t-h, --help\t\tDisplays this usage.\n\t-v, -vv\t\t\tToggles the verbosity of the program to level 1 or 2. \n\n",
-"    Mandatory argument:\n\t-u OUT_ENC, --UTF=OUT_ENC\tSets the output encoding.\n\t\t\t\t\tValid values for OUT_ENC: 8, 16LE, 16BE\n\n"
+"    Mandatory argument:\n\t-u OUT_ENC, --UTF=OUT_ENC\tSets the output encoding.\n\t\t\t\t\tValid values for OUT_ENC: 16LE, 16BE\n\n"
 "    Positional Arguments:\n\tIN_FILE\t\tThe file to convert.\n\t[OUT_FILE]\tOutput file name. If not present, defaults to stdout.\n",
 };
 
