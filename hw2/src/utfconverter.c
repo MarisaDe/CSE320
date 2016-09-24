@@ -187,6 +187,8 @@ void verbose2(clock_t start)
 	double cpu_time_used = ((double) (end - start)/CLOCKS_PER_SEC);
 	verbose1();
 	fprintf(stderr,"\t%s%f\n","Reading: real=",cpu_time_used);
+	fprintf(stderr,"\t%s%f\n","Converting: real=",cpu_time_used);
+	fprintf(stderr,"\t%s%f\n","Writing: real=",cpu_time_used);
 	fprintf(stderr,"\t%s%i%s\n","ASCII: ", ((numOfAscii-1)/numOfGlyphs)*100, "%");
 	fprintf(stderr,"\t%s%i%s\n","Surrogates: ",(numOfSurrogates/numOfGlyphs)*100, "%");
 	fprintf(stderr,"\t%s%i\n","Glyphs: ",numOfGlyphs);
@@ -235,8 +237,6 @@ int main(int argc, char** argv)
 
   	char actual[1048]; 
     realpath(filename, actual); 
-    printf("\n%s\n",actual); 
-
 
 	int fd = open(actual, O_RDONLY); 
 	/*rv is for read*/
