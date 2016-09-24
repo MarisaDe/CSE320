@@ -5,6 +5,8 @@
 #include <getopt.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/utsname.h>
+#include <sys/stat.h>
 
 
 #define MAX_BYTES 2
@@ -40,9 +42,9 @@ extern char* filename;
 /** The usage statement. */
 const char* USAGE[5] = { 
 "Command line utility for converting files from UTF-16LE to UTF-16BE or vice versa.\n\n",
-"Usage:  ./utf [-h] -u OUT_ENC IN_FILE\n\n",
-"    Option arguments:\n\t-h\t\tDisplays this usage.\n\n",
-"    Mandatory argument:\n\t-u OUT_ENC\tSets the output encoding.\n\t\t\tValid values for OUT_ENC: 16LE, 16BE\n\n"
+"Usage:  ./utf [-h--help] -u OUT_ENC | --UTF=OUT_ENC IN_FILE\n\n",
+"    Option arguments:\n\t-h, --help\t\tDisplays this usage.\n\t-v, -vv\t\t\tToggles the verbosity of the program to level 1 or 2. \n\n",
+"    Mandatory argument:\n\t-u OUT_ENC, --UTF=OUT_ENC\tSets the output encoding.\n\t\t\t\t\tValid values for OUT_ENC: 16LE, 16BE\n\n"
 "    Positional Arguments:\n\tIN_FILE\t\tThe file to convert.\n",
 };
 
@@ -52,6 +54,7 @@ extern endianness conversion;
 /** Which endianness the source file is in. */
 extern endianness source;
 
+extern int verbose;
 /**
  * A function that swaps the endianness of the bytes of an encoding from
  * LE to BE and vice versa.
@@ -68,8 +71,7 @@ Glyph* swap_endianness(Glyph* glyph);
  * @param glyph 	The pointer to the glyph struct to fill in with bytes.
  * @param data[2]	The array of data to fill the glyph struct with.
  * @param end	   	The endianness enum of the glyph.
- * @param fd 		The int pointer to the file descriptor of the input 
- * 			        file.
+ * 
  * @return Returns a pointer to the filled-in glyph.
  */
 Glyph* fill_glyph(Glyph* glyph, unsigned int data[2], endianness end);
@@ -93,6 +95,11 @@ void parse_args(int argc, char** argv);
  * Prints the usage statement.
  */
 void print_help();
+
+/**
+ * Prints info. for verbosity level 1.
+ */
+void verbose1();
 
 /**
  * Closes file descriptors and frees list and possibly does other
