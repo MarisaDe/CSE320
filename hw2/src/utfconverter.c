@@ -164,8 +164,12 @@ void verbose1()
 	double kb = 0.0;
 	kb = ((double)(buf->st_size)) /1000;
 
+	char actual[1048]; 
+    realpath(filename, actual);  
+
+
 	fprintf(stderr,"\t%s%f%s\n","Input file size: ",kb, " kb");
-	fprintf(stderr,"\t%s","Input file path: \n");
+	fprintf(stderr,"\t%s%s\n","Input file path: ", actual);
 	if(source == LITTLE) 	fprintf(stderr,"\t%s","Input file encoding: UTF-16LE\n");
 	else if(source == BIG) 	fprintf(stderr,"\t%s","Input file encoding: UTF-16BE\n");
 	if(conversion == LITTLE) 	fprintf(stderr,"\t%s","Output encoding: UTF-16LE\n");
@@ -229,7 +233,12 @@ int main(int argc, char** argv)
 	}*/
 
 
-	int fd = open(filename, O_RDONLY); 
+  	char actual[1048]; 
+    realpath(filename, actual); 
+    printf("\n%s\n",actual); 
+
+
+	int fd = open(actual, O_RDONLY); 
 	/*rv is for read*/
 	int rv = 0;
 
