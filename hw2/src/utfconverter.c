@@ -4,6 +4,9 @@ char* filename;
 endianness source;
 endianness conversion;
 int verbose;
+int numOfGlyphs = 0;
+int numOfSurrogates = 0;
+int numOfAscii = 0;
 
  Glyph* swap_endianness(Glyph* glyph)
  {
@@ -47,6 +50,7 @@ Glyph* fill_glyph(Glyph* glyph,unsigned int data[2],endianness end)
  	if(bits > 0x10000000 || bits == 0x10000000)
  	{	
  		glyph->surrogate = true;
+ 		numOfSurrogates++;
  		unsigned int high, low = 0;
  		bits = bits - 0x10000000;
  		high = (bits >> 10);
@@ -61,6 +65,7 @@ Glyph* fill_glyph(Glyph* glyph,unsigned int data[2],endianness end)
  	}
  	else
  		glyph->surrogate = false;
+ 		numOfAscii++;
 
   	glyph->end = end;
   	return glyph;
@@ -159,19 +164,36 @@ void verbose1()
 	double kb = 0.0;
 	kb = ((double)(buf->st_size)) /1000;
 
-	printf("%s%f%s\n","   Input file size: ",kb, " kb");
-	printf("%s","   Input file path: \n");
-	if(source == LITTLE) 	printf("%s","   Input file encoding: UTF-16LE\n");
-	else if(source == BIG) 	printf("%s","   Input file encoding: UTF-16BE\n");
-	if(conversion == LITTLE) 	printf("%s","   Output encoding: UTF-16LE\n");
-	else if(conversion == BIG)	printf("%s","   Output encoding: UTF-16BE\n");
+	fprintf(stderr,"\t%s%f%s\n","Input file size: ",kb, " kb");
+	fprintf(stderr,"\t%s","Input file path: \n");
+	if(source == LITTLE) 	fprintf(stderr,"\t%s","Input file encoding: UTF-16LE\n");
+	else if(source == BIG) 	fprintf(stderr,"\t%s","Input file encoding: UTF-16BE\n");
+	if(conversion == LITTLE) 	fprintf(stderr,"\t%s","Output encoding: UTF-16LE\n");
+	else if(conversion == BIG)	fprintf(stderr,"\t%s","Output encoding: UTF-16BE\n");
 
-	printf("%s%s\n","   Hostmachine: ", info.machine);
-	printf("%s","   Operating System: ");
-	printf("%s\n",info.sysname);
+	fprintf(stderr,"\t%s%s\n","Hostmachine: ", info.machine);
+	fprintf(stderr,"\t%s","Operating System: ");
+	fprintf(stderr,"%s\n",info.sysname);
 	free(buf);
 }
 
+void verbose2(clock_t start)
+{	
+	clock_t end = clock();
+	double cpu_time_used = ((double) (end - start)/CLOCKS_PER_SEC);
+	verbose1();
+	fprintf(stderr,"\t%s%f\n","Reading: real=",cpu_time_used);
+	fprintf(stderr,"\t%s%i%s\n","ASCII: ", ((numOfAscii-1)/numOfGlyphs)*100, "%");
+	fprintf(stderr,"\t%s%i%s\n","Surrogates: ",(numOfSurrogates/numOfGlyphs)*100, "%");
+	fprintf(stderr,"\t%s%i\n","Glyphs: ",numOfGlyphs);
+
+
+	//Reading: real=2.4, user=1.1, sys=.6
+//Converting: real=1.1, user=.4, sys=.1
+//Writing: real=3.5, user=2.1, sys=1.2
+
+
+}
 void print_help() {
 	int i;
 	for(i = 0; i < 5; i++){
@@ -194,6 +216,8 @@ void quit_converter(int fd)
 
 int main(int argc, char** argv)
 {
+	/*Start the clock*/
+	clock_t start = clock();
 	/*After calling parse_args(), filename and conversion should be set.*/
 	filename = calloc(strlen(argv[argc-1])+1,sizeof(char));
 	parse_args(argc, argv);
@@ -279,6 +303,8 @@ int main(int argc, char** argv)
  			glyph = fill_glyph(glyph, buf, source);
  			write_glyph(swap_endianness(glyph));
  		}
+
+ 		numOfGlyphs++;
 		/*void* memset_return = memset(glyph, 0, sizeof(Glyph)+1);
 	        Memory write failed, recover from it:
 	        if(memset_return == NULL){
@@ -291,8 +317,13 @@ int main(int argc, char** argv)
 	        }*/
  	}
 
-	free(&glyph->bytes); 
+ 	free(glyph);
+ 	if(verbose ==1) verbose1();
+ 	else if(verbose == 2) verbose2(start); 
  	free(filename);
-	quit_converter(NO_FD);
-	return 0;
+	close(STDERR_FILENO);
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	if(fd != NO_FD) close(fd);
+	return EXIT_SUCCESS;
 }

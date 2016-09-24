@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <sys/utsname.h>
 #include <sys/stat.h>
+#include <sys/time.h>
+#include <time.h>
 
 
 #define MAX_BYTES 2
@@ -55,6 +57,10 @@ extern endianness conversion;
 extern endianness source;
 
 extern int verbose;
+
+extern int numOfSurrogates;
+extern int numOfAscii;
+extern int numOfGlyphs;
 /**
  * A function that swaps the endianness of the bytes of an encoding from
  * LE to BE and vice versa.
@@ -100,6 +106,13 @@ void print_help();
  * Prints info. for verbosity level 1.
  */
 void verbose1();
+
+/**
+ * Prints info. for verbosity level 2.
+ *
+ * @param start The clock that starts the time.
+ */
+void verbose2(clock_t start);
 
 /**
  * Closes file descriptors and frees list and possibly does other
