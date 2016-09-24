@@ -41,6 +41,11 @@ typedef struct Glyph {
 /** The given filename. */
 extern char* filename;
 
+/** The given filename. */
+extern char* OUT_ENC;
+
+bool isThereOUT_ENC;
+
 /** The usage statement. */
 const char* USAGE[4] = {
 "./utf [-h|--help] [-v|-vv] -u OUT_ENC | --UTF=OUT_ENC IN_FILE [OUT_FILE]\n\n",
@@ -55,11 +60,19 @@ extern endianness conversion;
 /** Which endianness the source file is in. */
 extern endianness source;
 
+/** Which verbosity the user specifies it as. */
 extern int verbose;
 
+/** Keeps count of surrogates in the file. */
 extern int numOfSurrogates;
+
+/** Keeps count of ASCIIs in the file. */
 extern int numOfAscii;
+
+/** Keeps count of # of glyphs in the file. */
 extern int numOfGlyphs;
+
+
 /**
  * A function that swaps the endianness of the bytes of an encoding from
  * LE to BE and vice versa.

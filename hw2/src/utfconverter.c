@@ -1,6 +1,8 @@
 #include "utfconverter.h"
 
 char* filename;
+char* OUT_ENC;
+bool isThereOUT_ENC = false;
 endianness source;
 endianness conversion;
 int verbose;
@@ -73,11 +75,28 @@ Glyph* fill_glyph(Glyph* glyph,unsigned int data[2],endianness end)
 
 void write_glyph(Glyph* glyph)
  {
- 	if(glyph->surrogate){
- 		write(STDOUT_FILENO, glyph->bytes, SURROGATE_SIZE);
- 	} else {
- 		write(STDOUT_FILENO, glyph->bytes, NON_SURROGATE_SIZE);
+ 	if(isThereOUT_ENC)
+ 	{
+ 		int fd = open(OUT_ENC, O_CREAT | O_WRONLY | O_APPEND, 0666);
+ 		if(glyph->surrogate)
+ 		{
+ 			write(fd, glyph->bytes, SURROGATE_SIZE);
+ 		} else 
+ 		{
+ 			write(fd, glyph->bytes, NON_SURROGATE_SIZE);
+ 		}
  	}
+ 	else
+ 	{
+ 		if(glyph->surrogate)
+ 		{
+ 			write(STDOUT_FILENO, glyph->bytes, SURROGATE_SIZE);
+ 		} else 
+ 		{
+ 			write(STDOUT_FILENO, glyph->bytes, NON_SURROGATE_SIZE);
+ 		}
+ 	}
+
  }
 
  void parse_args(int argc, char** argv)
@@ -131,6 +150,7 @@ void write_glyph(Glyph* glyph)
  				}
  				if(optind < argc) 
  				{
+ 					filename = calloc(strlen(argv[optind])+1,sizeof(char));
  					strcpy(filename, argv[optind]);
  				}
  				else 
@@ -139,6 +159,13 @@ void write_glyph(Glyph* glyph)
  					free(filename);
  					print_help();
  					quit_converter(NO_FD); 
+ 				}
+ 				if(argc- optind > 1)
+ 				{
+ 					fprintf(stderr,"\t%s","out encoding is valid!! ");
+ 					isThereOUT_ENC = true;
+ 					OUT_ENC = calloc(strlen(argv[optind+1])+1,sizeof(char));
+ 					strcpy(OUT_ENC, argv[optind+1]);
  				}
 
  				break;
@@ -186,23 +213,23 @@ void verbose2(clock_t start)
 	clock_t end = clock();
 	double cpu_time_used = ((double) (end - start)/CLOCKS_PER_SEC);
 	verbose1();
-	fprintf(stderr,"\t%s%f\n","Reading: real=",cpu_time_used);
-	fprintf(stderr,"\t%s%f\n","Converting: real=",cpu_time_used);
-	fprintf(stderr,"\t%s%f\n","Writing: real=",cpu_time_used);
+	fprintf(stderr,"\t%s%f%s%f%s%f\n","Reading: real=",cpu_time_used," user=",cpu_time_used," sys=",cpu_time_used);
+	fprintf(stderr,"\t%s%f%s%f%s%f\n","Converting: real=",cpu_time_used," user=",cpu_time_used," sys=",cpu_time_used);
+	fprintf(stderr,"\t%s%f%s%f%s%f\n","Writing: real=",cpu_time_used," user=",cpu_time_used," sys=",cpu_time_used);
 	fprintf(stderr,"\t%s%i%s\n","ASCII: ", ((numOfAscii-1)/numOfGlyphs)*100, "%");
 	fprintf(stderr,"\t%s%i%s\n","Surrogates: ",(numOfSurrogates/numOfGlyphs)*100, "%");
 	fprintf(stderr,"\t%s%i\n","Glyphs: ",numOfGlyphs);
 
 
 	//Reading: real=2.4, user=1.1, sys=.6
-//Converting: real=1.1, user=.4, sys=.1
-//Writing: real=3.5, user=2.1, sys=1.2
+	//Converting: real=1.1, user=.4, sys=.1
+	//Writing: real=3.5, user=2.1, sys=1.2
 
 
 }
 void print_help() {
 	int i;
-	for(i = 0; i < 5; i++){
+	for(i = 0; i < 4; i++){
 		printf("%s", USAGE[i]); 
 	}
 	quit_converter(NO_FD);
@@ -217,6 +244,7 @@ void quit_converter(int fd)
 	if(fd != NO_FD)
 		close(fd);
 	exit(0);
+	EXIT_FAILURE;
 	/*Ensure that the file is included regardless of where we start compiling from.*/
 }
 
@@ -225,16 +253,12 @@ int main(int argc, char** argv)
 	/*Start the clock*/
 	clock_t start = clock();
 	/*After calling parse_args(), filename and conversion should be set.*/
-	filename = calloc(strlen(argv[argc-1])+1,sizeof(char));
+	//filename = calloc(strlen(argv[argc-1])+1,sizeof(char));
 	parse_args(argc, argv);
-	/*Check to see if valid filename has a / in front. MUST REMOVE OTHERWISE WONT WORK!*/
-	/*if(filename[0] == '/')
-	{
-		Increase pointer to next char to remove the 
-		filename++; 
-	}*/
 
+	if(!isThereOUT_ENC) OUT_ENC = NULL;
 
+	/*Get realpath of the file.*/
   	char actual[1048]; 
     realpath(filename, actual); 
 
@@ -328,7 +352,8 @@ int main(int argc, char** argv)
 
  	free(glyph);
  	if(verbose ==1) verbose1();
- 	else if(verbose == 2) verbose2(start); 
+ 	else if(verbose == 2) verbose2(start);
+ 	if(isThereOUT_ENC) free(OUT_ENC); 
  	free(filename);
 	close(STDERR_FILENO);
 	close(STDIN_FILENO);
