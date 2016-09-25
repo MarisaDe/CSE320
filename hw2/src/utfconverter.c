@@ -9,13 +9,30 @@ int verbose;
 int numOfGlyphs = 0;
 int numOfSurrogates = 0;
 int numOfAscii = 0;
+int fd;
 
  Glyph* swap_endianness(Glyph* glyph)
  {
- 	/*Surrogates do the same thing as non-surrogates.*/
- 	unsigned int swap = glyph->bytes[0];
- 	glyph->bytes[0] = glyph->bytes[1];
- 	glyph->bytes[1] = swap;
+ 	if(!glyph->surrogate)
+ 	{
+ 		/*Surrogates do the same thing as non-surrogates.*/
+ 		unsigned int swap = glyph->bytes[0];
+ 		glyph->bytes[0] = glyph->bytes[1];
+ 		glyph->bytes[1] = swap;
+ 	}
+ 	else
+ 	{
+ 		/*Surrogates do the same thing as non-surrogates.*/
+ 		unsigned int swap = glyph->bytes[0];
+ 		glyph->bytes[0] = glyph->bytes[1];
+ 		glyph->bytes[1] = swap;
+ 		swap = glyph->bytes[2];
+ 		glyph->bytes[2] = glyph->bytes[3];
+ 		glyph->bytes[3] = swap;
+ 	}
+
+
+
  	glyph->end = conversion;
  	return glyph;
  }
@@ -24,66 +41,79 @@ int numOfAscii = 0;
 
 Glyph* fill_glyph(Glyph* glyph,unsigned int data[2],endianness end) 
 {
- 	glyph->bytes[0] = data[0];
- 	glyph->bytes[1] = data[1];
- 	printf("%s%x\n", "first data: ",data[0]);
- 	printf("%s%x\n", "second data :",data[1]);
+ 	fprintf(stderr,"%s%x\n", "first data: ",data[0]);
+ 	fprintf(stderr,"%s%x\n", "second data :",data[1]);
 
  	unsigned int bits = 0; 
- 	/*Creates the code point*/
  	/*These would be non-surragate pairs.*/
  	if(end == BIG)
  	{
  		bits |= (data[0] + (data[1] << 8));
  		glyph->bytes[0] = data[1];
  		glyph->bytes[1] = data[0];
- 		printf("%s%x\n", "combined w/ BE: ",bits);
+ 		fprintf(stderr,"%s%x\n", "combined w/ BE: ",bits);
 
  	}
  	else if(end == LITTLE)
  	{
+ 		glyph->bytes[0] = data[0];
+ 		glyph->bytes[1] = data[1];
  		bits |= ((data[0]<<8) + data[1]);
- 		printf("%s%x\n", "combined w/ LE: ",bits);
+ 		fprintf(stderr,"%s%x\n", "combined w/ LE: ",bits);
 
  	}
 
+ 	glyph->surrogate = false;
+ 	bits = 0;
+ 	if(end == LITTLE) bits |= (data[0] + (data[1] << 8));
+ 	else if(end == BIG) bits |= ((data[0]<<8) + data[1]);
+	if(bits >= 0xD800 && bits <= 0xDBFF){
+		if(read(fd, &data[0], 1) == 1 && read(fd, &data[1], 1) == 1){
+			bits = 0;
+			if(end == LITTLE) bits |= (data[0] + (data[1] << 8));
+ 			else if(end == BIG) bits |= ((data[0]<<8) + data[1]);
+			/* Check low surrogate pair.*/
+			if(bits >= 0xD300 && bits <=0xDFFF){ 
+			 	numOfSurrogates++;
+ 				glyph->surrogate = true; 
 
- 	/*Check for surrogate pairs*/
- 	if(bits > 0x10000000 || bits == 0x10000000)
- 	{	
- 		glyph->surrogate = true;
- 		numOfSurrogates++;
- 		unsigned int high, low = 0;
- 		bits = bits - 0x10000000;
- 		high = (bits >> 10);
- 		high+= 0xD8000000;
- 		low =(bits ^= 0x3FF00000);
- 		low+= 0xDC000000;
- 		printf("%s%x\n", "surrogate high:", high);
- 		printf("%s%x\n", "surrogate low:", low);
- 		glyph->bytes[0] = data[high];
- 		glyph->bytes[1] = data[low];
+			} else { 
+ 				glyph->surrogate = false;
+ 				lseek(fd, -OFFSET, SEEK_CUR);
+ 			}
+		}
+	}
 
- 	}
- 	else
- 		glyph->surrogate = false;
- 		numOfAscii++;
+	if(glyph->surrogate)
+	{
+		if(end == LITTLE)
+		{
+			glyph->bytes[2] = data[0];
+			glyph->bytes[3] = data[1];
+		}
+		else if(end == BIG)
+		{
+			glyph->bytes[2] = data[1];
+			glyph->bytes[3] = data[0];
+		}
+	}
 
+	if(bits <= 127) numOfAscii++; 
   	glyph->end = end;
   	return glyph;
- }
+}
 
 void write_glyph(Glyph* glyph)
  {
  	if(isThereOUT_ENC)
  	{
- 		int fd = open(OUT_ENC, O_CREAT | O_WRONLY | O_APPEND, 0666);
+ 		int fdo = open(OUT_ENC, O_CREAT | O_WRONLY | O_APPEND, 0666);
  		if(glyph->surrogate)
  		{
- 			write(fd, glyph->bytes, SURROGATE_SIZE);
+ 			write(fdo, glyph->bytes, SURROGATE_SIZE);
  		} else 
  		{
- 			write(fd, glyph->bytes, NON_SURROGATE_SIZE);
+ 			write(fdo, glyph->bytes, NON_SURROGATE_SIZE);
  		}
  	}
  	else
@@ -96,6 +126,7 @@ void write_glyph(Glyph* glyph)
  			write(STDOUT_FILENO, glyph->bytes, NON_SURROGATE_SIZE);
  		}
  	}
+ 	
 
  }
 
@@ -162,7 +193,6 @@ void write_glyph(Glyph* glyph)
  				}
  				if(argc- optind > 1)
  				{
- 					fprintf(stderr,"\t%s","out encoding is valid!! ");
  					isThereOUT_ENC = true;
  					OUT_ENC = calloc(strlen(argv[optind+1])+1,sizeof(char));
  					strcpy(OUT_ENC, argv[optind+1]);
@@ -176,7 +206,7 @@ void write_glyph(Glyph* glyph)
  		}
 
  	}
-if(verbose > 3) verbose = 2;
+if(verbose > 2) verbose = 2;
 return;
 }
 
@@ -213,24 +243,21 @@ void verbose2(clock_t start)
 	clock_t end = clock();
 	double cpu_time_used = ((double) (end - start)/CLOCKS_PER_SEC);
 	verbose1();
+	float asciiPercent = ((float)numOfAscii/(float)numOfGlyphs)*100;
+	int surrogatePercent = ((float)numOfSurrogates/(float)numOfGlyphs)*100;
+
 	fprintf(stderr,"\t%s%f%s%f%s%f\n","Reading: real=",cpu_time_used," user=",cpu_time_used," sys=",cpu_time_used);
 	fprintf(stderr,"\t%s%f%s%f%s%f\n","Converting: real=",cpu_time_used," user=",cpu_time_used," sys=",cpu_time_used);
 	fprintf(stderr,"\t%s%f%s%f%s%f\n","Writing: real=",cpu_time_used," user=",cpu_time_used," sys=",cpu_time_used);
-	fprintf(stderr,"\t%s%i%s\n","ASCII: ", ((numOfAscii-1)/numOfGlyphs)*100, "%");
-	fprintf(stderr,"\t%s%i%s\n","Surrogates: ",(numOfSurrogates/numOfGlyphs)*100, "%");
+	fprintf(stderr,"\t%s%f%s\n","ASCII: ", asciiPercent,"%");
+	fprintf(stderr,"\t%s%i%s\n","Surrogates: ",surrogatePercent, "%");
 	fprintf(stderr,"\t%s%i\n","Glyphs: ",numOfGlyphs);
-
-
-	//Reading: real=2.4, user=1.1, sys=.6
-	//Converting: real=1.1, user=.4, sys=.1
-	//Writing: real=3.5, user=2.1, sys=1.2
-
-
 }
+
 void print_help() {
 	int i;
 	for(i = 0; i < 4; i++){
-		printf("%s", USAGE[i]); 
+		fprintf(stderr,"%s", USAGE[i]); 
 	}
 	quit_converter(NO_FD);
 }
@@ -253,7 +280,6 @@ int main(int argc, char** argv)
 	/*Start the clock*/
 	clock_t start = clock();
 	/*After calling parse_args(), filename and conversion should be set.*/
-	//filename = calloc(strlen(argv[argc-1])+1,sizeof(char));
 	parse_args(argc, argv);
 
 	if(!isThereOUT_ENC) OUT_ENC = NULL;
@@ -262,7 +288,7 @@ int main(int argc, char** argv)
   	char actual[1048]; 
     realpath(filename, actual); 
 
-	int fd = open(actual, O_RDONLY); 
+	fd = open(actual, O_RDONLY); 
 	/*rv is for read*/
 	int rv = 0;
 
@@ -288,11 +314,15 @@ int main(int argc, char** argv)
 		{
 			/*file is little endian FFFE*/
 			source = LITTLE; 
+			/*include BOM in # of glyphs*/
+			numOfGlyphs++;
  		} 
-		else if(buf[0] == 0xfe000000 && buf[1] == 0xff000000)
+		else if(buf[0] == 0xfe && buf[1] == 0xff)
 		{
  			/*file is big endian FEFF*/
  			source = BIG;
+ 			/*include BOM in # of glyphs*/
+ 			numOfGlyphs++;
  		} 
 			
 		else {
@@ -307,18 +337,17 @@ int main(int argc, char** argv)
  		/*Memory write failed, recover from it:*/
  		if(memset_return == NULL)
  		{
- 			/*tweak write permission on heap memory.
- 			asm("movl $8, %esi\n\t"
- 			    "movl $.LC0, %edi\n\t"
- 			    "movl $0, %eax");
- 			Now make the request again.*/
  			memset(glyph, 0, sizeof(Glyph));
 
  		}
 	}
 
 	/*Accounts for endianess and swaps it*/
-	if(conversion != source)
+	if(conversion == source)
+	{
+		write_glyph(fill_glyph(glyph, buf, source));
+	}
+	else if(conversion != source)
 	{
 		glyph = fill_glyph(glyph, buf, source);
 		write_glyph(swap_endianness(glyph));
@@ -338,16 +367,6 @@ int main(int argc, char** argv)
  		}
 
  		numOfGlyphs++;
-		/*void* memset_return = memset(glyph, 0, sizeof(Glyph)+1);
-	        Memory write failed, recover from it:
-	        if(memset_return == NULL){
-		        tweak write permission on heap memory.
-		        asm("movl $8, %esi\n\t"
-		            "movl $.LC0, %edi\n\t"
-		            "movl $0, %eax");
-		        Now make the request again.
-		        memset(glyph, 0, sizeof(Glyph)+1);
-	        }*/
  	}
 
  	free(glyph);

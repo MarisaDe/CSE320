@@ -11,11 +11,11 @@
 #include <time.h>
 
 
-#define MAX_BYTES 2
-#define SURROGATE_SIZE 2
+#define MAX_BYTES 4
+#define SURROGATE_SIZE 4
 #define NON_SURROGATE_SIZE 2
 #define NO_FD -1
-#define OFFSET 4
+#define OFFSET 2
 
 #define FIRST  0
 #define SECOND 1
@@ -72,6 +72,9 @@ extern int numOfAscii;
 /** Keeps count of # of glyphs in the file. */
 extern int numOfGlyphs;
 
+/** Keep track of file descriptor. */
+extern int fd;
+
 
 /**
  * A function that swaps the endianness of the bytes of an encoding from
@@ -89,6 +92,8 @@ Glyph* swap_endianness(Glyph* glyph);
  * @param glyph 	The pointer to the glyph struct to fill in with bytes.
  * @param data[2]	The array of data to fill the glyph struct with.
  * @param end	   	The endianness enum of the glyph.
+ * @param fd 		The int pointer to the file descriptor of the input 
+ * 					file.
  * 
  * @return Returns a pointer to the filled-in glyph.
  */
