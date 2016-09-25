@@ -41,9 +41,6 @@ int fd;
 
 Glyph* fill_glyph(Glyph* glyph,unsigned int data[2],endianness end) 
 {
- 	fprintf(stderr,"%s%x\n", "first data: ",data[0]);
- 	fprintf(stderr,"%s%x\n", "second data :",data[1]);
-
  	unsigned int bits = 0; 
  	/*These would be non-surragate pairs.*/
  	if(end == BIG)
@@ -51,7 +48,6 @@ Glyph* fill_glyph(Glyph* glyph,unsigned int data[2],endianness end)
  		bits |= (data[0] + (data[1] << 8));
  		glyph->bytes[0] = data[1];
  		glyph->bytes[1] = data[0];
- 		fprintf(stderr,"%s%x\n", "combined w/ BE: ",bits);
 
  	}
  	else if(end == LITTLE)
@@ -59,7 +55,6 @@ Glyph* fill_glyph(Glyph* glyph,unsigned int data[2],endianness end)
  		glyph->bytes[0] = data[0];
  		glyph->bytes[1] = data[1];
  		bits |= ((data[0]<<8) + data[1]);
- 		fprintf(stderr,"%s%x\n", "combined w/ LE: ",bits);
 
  	}
 
@@ -229,6 +224,7 @@ void verbose1()
 	fprintf(stderr,"\t%s%s\n","Input file path: ", actual);
 	if(source == LITTLE) 	fprintf(stderr,"\t%s","Input file encoding: UTF-16LE\n");
 	else if(source == BIG) 	fprintf(stderr,"\t%s","Input file encoding: UTF-16BE\n");
+	else if(source == EIGHT) 	fprintf(stderr,"\t%s","Input file encoding: UTF-8\n");
 	if(conversion == LITTLE) 	fprintf(stderr,"\t%s","Output encoding: UTF-16LE\n");
 	else if(conversion == BIG)	fprintf(stderr,"\t%s","Output encoding: UTF-16BE\n");
 
@@ -264,7 +260,6 @@ void print_help() {
 
 void quit_converter(int fd)
 {
-	//free(filename);
 	close(STDERR_FILENO);
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
@@ -296,6 +291,7 @@ int main(int argc, char** argv)
 	{
 		fprintf(stderr, "Not a valid filename.\n"); 
  		free(filename);
+ 		if(isThereOUT_ENC) free(OUT_ENC);
 		print_help();
 	}
 
@@ -324,6 +320,33 @@ int main(int argc, char** argv)
  			/*include BOM in # of glyphs*/
  			numOfGlyphs++;
  		} 
+ 		else if(buf[0]== 0xef && buf[1] == 0xbb)
+ 		{
+ 			if((rv = read(fd, &buf[0], 1)) == 1){
+				if(buf[0]== 0xbf)
+				{
+					/*file is UTF-8*/
+					source = EIGHT;
+					numOfGlyphs++;
+				} 
+				else
+				{
+					free(&glyph->bytes); 
+ 					free(filename);
+ 					fprintf(stderr, "File has no BOM.\n");
+ 					print_help();
+ 					quit_converter(NO_FD); 	
+ 				}	
+ 			}	
+			else{
+				free(&glyph->bytes); 
+ 				free(filename);
+ 				fprintf(stderr, "File has no BOM.\n");
+ 				print_help();
+ 				quit_converter(NO_FD); 
+ 			}	
+		}
+ 	
 			
 		else {
  			/*file has no BOM*/
@@ -338,7 +361,6 @@ int main(int argc, char** argv)
  		if(memset_return == NULL)
  		{
  			memset(glyph, 0, sizeof(Glyph));
-
  		}
 	}
 
