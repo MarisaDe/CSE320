@@ -67,7 +67,7 @@
 
 #define payload_check(ptr) do { \
     if ((unsigned long)(ptr) % 16 != 0) { \
-        warn("Returned payload address is not divisble by a quadword. %p %% 16 = %lu\n", (ptr), (unsigned long)(ptr) % 16); \
+        warn("Returned payload address is not divisible by a quadword. %p %% 16 = %lu\n", (ptr), (unsigned long)(ptr) % 16); \
     } \
 } while(0)
 
@@ -114,6 +114,8 @@ int main(int argc, char *argv[]) {
     null_check(value2, sizeof(long));
     payload_check(value2);
     sf_varprint(value2);
+
+
     // Assign a value
     *value2 = VALUE2_VALUE;
     // Check value
