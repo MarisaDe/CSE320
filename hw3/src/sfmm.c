@@ -60,6 +60,7 @@ if(freelist_head == NULL){
 	int total = size + SF_HEADER_SIZE + SF_HEADER_SIZE;
 	printf("%s%d\n", "size: ", total);
 	int padding = 0;
+	int payload = 0;
 
 	//Account for padding and total size of the block
 	if(total % 16 !=0)
@@ -67,11 +68,12 @@ if(freelist_head == NULL){
 		padding = total%16;
 		padding = 16 - padding;
 		total += padding;
+		payload = total - 16;
 	}
 
 	//set values of freelist_head
 	freelist_head->header.padding_size = padding;
-	freelist_head->header.block_size = total >>4;
+	freelist_head->header.block_size = total >> 4;
 	freelist_head->header.alloc = 1;
 
 
@@ -83,6 +85,12 @@ if(freelist_head == NULL){
 	//struct sf_header *headerptr = &test;
 	//*(unsigned int long *)(mem) = (unsigned int long)(headerptr);
 	//printf("%s%p\n", "Header PTR: ", headerptr);
+
+	sf_footer *freelist_footer = (sf_footer*)((char*)freelist_head + payload + SF_HEADER_SIZE);
+	memset(freelist_footer, 0, sizeof(*freelist_footer));
+	freelist_footer->alloc = 1;
+	freelist_footer->block_size = total >> 4;
+	printf("%s%p\n", "footer address ", freelist_footer);
 
 	//Returns payload address by increasing the pointer by size of block.
 	return (char*)mem + 8;
