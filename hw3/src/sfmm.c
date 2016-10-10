@@ -38,7 +38,7 @@ sf_free_header* freelist_head = NULL;
 void *sf_malloc(size_t size){
 
 if (size == 0) return NULL;
-if (size > 4096){
+if (size > 16384){		//If size > 4 pages, error occurs.
 	errno = EINVAL;
 	return NULL;
 }
@@ -53,14 +53,18 @@ if(freelist_head == NULL){
 	{
 		(char*)freelist_head++;
 	}
-	memset(freelist_head, 0, sizeof(*freelist_head));
+
+	//initialize free block
+	freelist_head->header.padding_size = 0;
+	freelist_head->header.block_size = 4096 >> 4;
+	freelist_head->header.alloc = 0;
+	freelist_head->next = NULL;
+	freelist_head->prev = NULL;
 
 }
-
+	//Initialize useful variables
 	int total = size + SF_HEADER_SIZE + SF_HEADER_SIZE;
-	printf("%s%d\n", "size: ", total);
-	int padding = 0;
-	int payload = 0;
+	int padding, payload = 0;
 
 	//Account for padding and total size of the block
 	if(total % 16 !=0)
@@ -71,29 +75,34 @@ if(freelist_head == NULL){
 		payload = total - 16;
 	}
 
-	//set values of freelist_head
-	freelist_head->header.padding_size = padding;
-	freelist_head->header.block_size = total >> 4;
-	freelist_head->header.alloc = 1;
+	//set allocated header block values
+	sf_header* alloc_head = (sf_header*)((char*)freelist_head);
+	alloc_head->padding_size = padding;
+	alloc_head->block_size = total >> 4;
+	alloc_head->alloc = 1;
 
 
-  	//gets heap breakpoint without moving it. Will always be a multiple of 8.
-	mem = freelist_head;
+  	//sets mem pointer to the alloc head block to return later.
+	mem = alloc_head;
 	printf("%s%p\n", "MEM: ", mem);
-	//struct sf_header test;
-	//test.alloc = 1;
-	//struct sf_header *headerptr = &test;
-	//*(unsigned int long *)(mem) = (unsigned int long)(headerptr);
-	//printf("%s%p\n", "Header PTR: ", headerptr);
 
-	sf_footer *freelist_footer = (sf_footer*)((char*)freelist_head + payload + SF_HEADER_SIZE);
-	memset(freelist_footer, 0, sizeof(*freelist_footer));
-	freelist_footer->alloc = 1;
-	freelist_footer->block_size = total >> 4;
-	printf("%s%p\n", "footer address ", freelist_footer);
+	//sets values for the alloc footer
+	sf_footer *alloc_footer = (sf_footer*)((char*)freelist_head + payload + SF_HEADER_SIZE);
+	memset(alloc_footer, 0, sizeof(*alloc_footer));
+	alloc_footer->alloc = 1;
+	alloc_footer->block_size = total >> 4;
+	printf("%s%p\n", "footer address ", alloc_footer);
 
-	//Returns payload address by increasing the pointer by size of block.
-	return (char*)mem + 8;
+	//Move the freelist_header pointer to the next free block
+	freelist_head = (sf_free_header*)((char*)alloc_footer + SF_FOOTER_SIZE);
+
+	//Reset the freelist_head values as if it was a free block
+	freelist_head->header.padding_size = 0;
+	freelist_head->header.block_size -= alloc_head->block_size >> 4;
+	freelist_head->header.alloc = 0;
+
+	//Returns payload address by increasing the pointer by size of the header block.
+	return (char*)mem + SF_HEADER_SIZE;
 }
 
 /**
