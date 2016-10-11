@@ -11,10 +11,14 @@
  */
 
 sf_free_header* freelist_head = NULL;
-
+static unsigned int long internal = 0;
+static unsigned int long external = 0;
+static unsigned int long allocations = 0;
+//static unsigned int long frees = 0;
+//static unsigned int long coalesces = 0;
 
 /**
-* This is a helper funcion for malloc
+* This is a helper funcion for malloc. It allocates memory and moves the freelist_head only.
 * 
  */
 void *sf_fillAlloc(int payload, int padding, int total, sf_free_header* temp)
@@ -47,8 +51,16 @@ void *sf_fillAlloc(int payload, int padding, int total, sf_free_header* temp)
 	sf_footer *freelist_foot = (sf_footer*)((char*)freelist_head + (freelist_head->header.block_size <<4) - SF_FOOTER_SIZE);
 	freelist_foot->alloc = 0;
 	freelist_foot->block_size = freelist_head->header.block_size;
+	printf("%s%p\n", "free footer address: ", freelist_foot);
 
 	//Returns payload address by increasing the pointer by size of the header block.
+	allocations++;
+	internal += SF_HEADER_SIZE + SF_FOOTER_SIZE + padding;
+	printf("%s%d\n", "padding: ", padding);
+	external = freelist_head->header.block_size << 4;
+	printf("%s%lu\n", "# of internal bytes: ", internal);
+	printf("%s%lu\n", "# of free bytes (external): ", external);
+	printf("%s%lu\n", "# of allocs: ", allocations);
 	return (char*)mem + SF_HEADER_SIZE;
 
 
@@ -88,7 +100,7 @@ int total = size + SF_HEADER_SIZE + SF_HEADER_SIZE;
 int padding, payload = 0;
 sf_free_header* temp;
 
-//Account for padding and total size of the block
+//Account for padding and total size of the block if not divisible by 16
 if(total % 16 !=0)
 {	
 	padding = total%16;
@@ -96,6 +108,13 @@ if(total % 16 !=0)
 	total += padding;
 	payload = total - (SF_HEADER_SIZE + SF_HEADER_SIZE);
 }
+//Account if it is divisible by 16
+else
+{
+	padding = 0;
+	payload = total - (SF_HEADER_SIZE + SF_HEADER_SIZE);
+}
+	
 
 
 //If there is no free header blocks, create space for it.
@@ -112,6 +131,7 @@ if(freelist_head == NULL){
 	freelist_head->next = NULL;
 	freelist_head->prev = NULL;
 	freelist_head->header.block_size = 4096 >> 4;
+	//Update all free space
 
 	temp = freelist_head;
 	printf("%s%d\n", "temp block size: ", temp->header.block_size<<4);
@@ -180,7 +200,7 @@ else
 					//ALLOCATE MEMORY HEREEEEEE
 				}
 				//Last element in the list AND not enough space. We must expand the heap.
-				if(traverseHeaders->next == NULL )
+				else if(traverseHeaders->next == NULL )
 				{
 					while(size > traverseHeaders->header.block_size <<4)
 					{
@@ -241,5 +261,16 @@ void *sf_realloc(void *ptr, size_t size){
  *  @return If successful return 0, if failure return -1
  */
 int sf_info(info* meminfo){
-  return -1;
+
+if(meminfo == NULL) return 0;
+
+else
+{	
+	meminfo->allocations = allocations;
+	meminfo->internal = internal;
+	meminfo->external = external;
+	//meminfo->frees = frees;
+	//meminfo->coalesces= coalesces;
+  	return 0;
+  }
 }
