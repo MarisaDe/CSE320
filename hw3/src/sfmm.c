@@ -12,8 +12,49 @@
 
 sf_free_header* freelist_head = NULL;
 
-//static char page[4096];
-//static char maxsize[16384];
+
+/**
+* This is a helper funcion for malloc
+* 
+ */
+void *sf_fillAlloc(int payload, int padding, int total)
+{
+	//set allocated header block values
+	sf_header* alloc_head = (sf_header*)((char*)freelist_head);
+	alloc_head->padding_size = padding;
+	alloc_head->block_size = total >> 4;
+	alloc_head->alloc = 1;
+
+	//Creates a pointer to memory that we want to return
+	void *mem;
+  	//sets mem pointer to the alloc head block to return later.
+	mem = alloc_head;
+	printf("%s%p\n", "MEM: ", mem);
+
+	//sets values for the alloc footer
+	sf_footer *alloc_footer = (sf_footer*)((char*)freelist_head + payload + SF_HEADER_SIZE);
+	memset(alloc_footer, 0, sizeof(*alloc_footer));
+	alloc_footer->alloc = 1;
+	alloc_footer->block_size = total >> 4;
+	printf("%s%p\n", "footer address ", alloc_footer);
+
+	sf_free_header* freetemp = (sf_free_header*)((char*)alloc_footer + SF_FOOTER_SIZE);
+	freetemp->header.block_size = freelist_head->header.block_size;
+	printf("%s%d\n", "FREETEMP block size: ", freetemp->header.block_size<<4);
+	printf("%s%d\n", "freelist_head block size: ", freelist_head->header.block_size<<4);
+	//Move the freelist_header pointer to the next free block
+	freelist_head = (sf_free_header*)((char*)alloc_footer + SF_FOOTER_SIZE);
+
+	//Reset the freelist_head values as if it was a free block
+	freelist_head->header.block_size = (freetemp->header.block_size - alloc_head->block_size) >> 4;
+	printf("%s%d\n", "freelistb size: ", freelist_head->header.block_size<<4);
+
+	//Returns payload address by increasing the pointer by size of the header block.
+	return (char*)mem + SF_HEADER_SIZE;
+
+
+
+}
 
 /**
 * This is your implementation of malloc. It creates dynamic memory which
@@ -43,8 +84,19 @@ if (size > 16384){		//If size > 4 pages, error occurs.
 	return NULL;
 }
 
-//Creates a pointer to memory that we want to return
-void *mem;
+//Initialize useful variables
+int total = size + SF_HEADER_SIZE + SF_HEADER_SIZE;
+int padding, payload = 0;
+
+//Account for padding and total size of the block
+if(total % 16 !=0)
+{	
+	padding = total%16;
+	padding = 16 - padding;
+	total += padding;
+	payload = total - (SF_HEADER_SIZE + SF_HEADER_SIZE);
+}
+
 
 //If there is no free header blocks, create space for it.
 if(freelist_head == NULL){
@@ -56,53 +108,64 @@ if(freelist_head == NULL){
 
 	//initialize free block
 	freelist_head->header.padding_size = 0;
-	freelist_head->header.block_size = 4096 >> 4;
 	freelist_head->header.alloc = 0;
 	freelist_head->next = NULL;
 	freelist_head->prev = NULL;
-
+	freelist_head->header.block_size = 4096 >> 4;
+	printf("%s%d\n", "freelist_head block size: ", freelist_head->header.block_size<<4);
+	return sf_fillAlloc(payload, padding, total);
 }
-	//Initialize useful variables
-	int total = size + SF_HEADER_SIZE + SF_HEADER_SIZE;
-	int padding, payload = 0;
 
-	//Account for padding and total size of the block
-	if(total % 16 !=0)
-	{	
-		padding = total%16;
-		padding = 16 - padding;
-		total += padding;
-		payload = total - 16;
+//freelist_head must have some address. Compare needed size to size of free block to see if we can use it. 
+else
+{
+	printf("%s\n", "Freelist_head is NOT NULL ");
+	printf("%s%d\n", "freelist block size!!!: ", freelist_head->header.block_size);
+	//We found space to allocate memory in the freelist_head!
+	if(total <= freelist_head->header.block_size<<4)
+	{
+		printf("%s%d\n", "freelist block size!!!: ", freelist_head->header.block_size);
+		return sf_fillAlloc(payload, padding, total);
 	}
 
-	//set allocated header block values
-	sf_header* alloc_head = (sf_header*)((char*)freelist_head);
-	alloc_head->padding_size = padding;
-	alloc_head->block_size = total >> 4;
-	alloc_head->alloc = 1;
+	//We must search if there are any other free blocks in the the freelist linked list then compare sizes. 
+	else{
 
+		sf_free_header *traverseHeaders = freelist_head;
+		//There is something next in our free linked list.
+		while(traverseHeaders->next != NULL)
+		{
+				//We can fit our data into that free block!
+				if(total <= freelist_head->next->header.block_size<<4)
+				{
+					//ALLOCATE MEMORY HEREEEEEE
+				}
+			traverseHeaders = traverseHeaders->next;
+		}
+		//We ran out of elements in our linked list so we must request for more space on the heap.
+		//initialize free block
+		freelist_head->header.padding_size = 0;
+		freelist_head->header.alloc = 0;
+		freelist_head->next = NULL;
+		freelist_head->prev = NULL;
+		freelist_head->header.block_size = 0 >> 4;
 
-  	//sets mem pointer to the alloc head block to return later.
-	mem = alloc_head;
-	printf("%s%p\n", "MEM: ", mem);
+		while(size > freelist_head->header.block_size<<4)
+		{
+			freelist_head= sf_sbrk();
+			freelist_head->header.block_size += 4096 >> 4;
+		} 
+		//If bigger than 4 pages, return null!
+		if(sf_sbrk(0) == (void *) -1)
+		{
+			return NULL;
+		}
+		//Set allocated memory to new free block and return that payload address.
+		return sf_fillAlloc(payload,padding,total);
+		}
 
-	//sets values for the alloc footer
-	sf_footer *alloc_footer = (sf_footer*)((char*)freelist_head + payload + SF_HEADER_SIZE);
-	memset(alloc_footer, 0, sizeof(*alloc_footer));
-	alloc_footer->alloc = 1;
-	alloc_footer->block_size = total >> 4;
-	printf("%s%p\n", "footer address ", alloc_footer);
-
-	//Move the freelist_header pointer to the next free block
-	freelist_head = (sf_free_header*)((char*)alloc_footer + SF_FOOTER_SIZE);
-
-	//Reset the freelist_head values as if it was a free block
-	freelist_head->header.padding_size = 0;
-	freelist_head->header.block_size -= alloc_head->block_size >> 4;
-	freelist_head->header.alloc = 0;
-
-	//Returns payload address by increasing the pointer by size of the header block.
-	return (char*)mem + SF_HEADER_SIZE;
+	return NULL;	
+	}
 }
 
 /**
