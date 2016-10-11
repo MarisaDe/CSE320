@@ -236,6 +236,77 @@ else
 
 void sf_free(void *ptr){
 
+	if(ptr == NULL)
+	{
+		errno = EINVAL;
+		return;
+	}
+	//Must check the bits of that address to make sure that memory was allocated
+
+	ptr -= SF_HEADER_SIZE;   //ptr is a payload so we must subtract it to get the header size
+	sf_header* alloc_h  = (sf_header*)(ptr);
+	sf_footer* alloc_f  = (sf_footer*)(ptr + alloc_h->block_size - SF_FOOTER_SIZE);
+
+	//The address given was allocated! We must free it now.
+	if(alloc_h->alloc == 1)
+	{
+		//Check the (left) adjacent footer to see if that's a free block.
+		alloc_f = (sf_footer*)(ptr + SF_HEADER_SIZE);
+
+		//The left is free so we must coalesce it
+		//** CASE 3 or 4 at this point **
+		if(alloc_f->alloc == 0){
+
+
+
+		}
+
+		//Now we must check the block on the right
+		//The left block must be allocated so we ignore it and check the header block on the right.
+		else
+		{
+			//Update alloc header address to the header to its right.
+			alloc_h += (alloc_h->block_size - SF_HEADER_SIZE);
+
+			//The right is free so we must coalesce it
+			//** CASE 2 ** since we checked for left prior and it is already allocated.
+			if(alloc_h->alloc == 0)
+			{
+				//
+			}
+
+			//** CASE 1 = neither blocks adjacent to it are free **
+			//Add this block as the freelist_head
+			else
+			{
+				//Replace current header with a free header
+				alloc_h = ptr;
+				sf_free_header* alloc_free_h = ptr;
+				alloc_free_h->header.alloc = 0;
+				alloc_free_h->header.block_size = alloc_h->block_size;
+
+				//Free the footer
+				alloc_f = ptr + alloc_free_h->header.block_size - SF_FOOTER_SIZE;
+				alloc_f->alloc = 0;
+				alloc_f->block_size = alloc_free_h->header.block_size;
+
+				//Set up next and previous for the free header (copy that of the freelist_head)
+				alloc_free_h->next = freelist_head->next;
+				alloc_free_h->prev = freelist_head->prev;
+
+				//Now set the freelist_head to this new free header.
+				freelist_head = alloc_free_h;
+
+				//Add the free bytes to the external variable and subtract from internal.
+				external+= alloc_free_h->header.block_size;
+				internal-= alloc_free_h->header.block_size;
+			}
+
+		}
+
+		return;
+	}
+
 }
 
 /**
