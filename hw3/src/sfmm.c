@@ -15,7 +15,7 @@ static unsigned int long internal = 0;
 static unsigned int long external = 0;
 static unsigned int long allocations = 0;
 //static unsigned int long frees = 0;
-//static unsigned int long coalesces = 0;
+static unsigned int long coalesces = 0;
 
 /**
 * This is a helper funcion for malloc. It allocates memory and moves the freelist_head only.
@@ -186,16 +186,33 @@ else
 		while(traverseHeaders!= NULL)
 		{
 				//We can fit our data into that free block!
-				if(total <= freelist_head->next->header.block_size<<4)
+				if(total <= traverseHeaders->header.block_size<<4)
 				{
-						//sf_free_header* temp = freelist_head;
-						//printf("%s%d\n", "temp block size: ", temp->header.block_size<<4);
-						//freelist_head = (sf_free_header*)((char*)freelist_head + total);
+					traverseHeaders->prev->next = traverseHeaders->next;   //set previous block to current's next block
+					traverseHeaders->next->prev = traverseHeaders->prev;   //set next block to the current's previous block
 
-						//freelist_head->header.alloc = temp->header.alloc;
-						//freelist_head->header.block_size = temp->header.block_size - (total>>4);
-						//printf("%s%d\n", "freelist: ", freelist_head->header.block_size<<4
+					sf_free_header* temp = traverseHeaders;
 
+					traverseHeaders->next = freelist_head;
+					traverseHeaders->prev = NULL;
+
+					freelist_head->next = temp;
+				    freelist_head = temp;
+					freelist_head->header.alloc = 0;
+					freelist_head->header.block_size -= temp->header.block_size;
+
+					//Remove the block from the list!! (Put the split block in the from of the listb)
+					return sf_fillAlloc(payload, padding, total, temp);
+
+
+					//sf_free_header* temp = freelist_head;
+					//printf("%s%d\n", "temp block size: ", temp->header.block_size<<4);
+					//freelist_head = (sf_free_header*)((char*)freelist_head + total);
+
+					//freelist_head->header.alloc = temp->header.alloc;
+					//freelist_head->header.block_size = temp->header.block_size - (total>>4);
+					//printf("%s%d\n", "freelist: ", freelist_head->header.block_size<<4
+					//return sf_fillAlloc(payload, padding, total, temp);
 
 					//ALLOCATE MEMORY HEREEEEEE
 				}
@@ -206,18 +223,72 @@ else
 					{
 						//printf("%s%d\n", "allocating mem in sbrk..: ", freelist_head->header.block_size<<4);
 						temp = traverseHeaders;
-						traverseHeaders->next = sf_sbrk(1);
-						traverseHeaders->next->header.block_size = temp->header.block_size+ (4096 >> 4);
-						printf("%s%d\n", "allocating traverseheader mem in sbrk..: ", freelist_head->header.block_size<<4);
+						traverseHeaders = sf_sbrk(1);
+						traverseHeaders->header.block_size = temp->header.block_size + (4096 >> 4);
+						printf("%s%d\n", "allocating traverseheader mem in sbrk..: ", traverseHeaders->header.block_size<<4);
+
+						internal+= SF_HEADER_SIZE + SF_FOOTER_SIZE;
+						printf("%s%lu\n", "# of internal IN ZE LOOP: ", internal);	
+
+						//Check to see if there is free space previously adjacent to the new space created.
+						sf_footer* checkFree = (sf_footer*)((char*)traverseHeaders - SF_FOOTER_SIZE); //Checks footer of previous
+
+						//Free so we must coalesce
+						if(checkFree->alloc == 0 && checkFree->block_size<<4)
+						{
+							printf("%s%d\n", "allocating CHECKFREE!: ", checkFree->block_size >> 4);
+
+							//Set new header
+							sf_free_header *alloc_free_h = (sf_free_header*)((char*)traverseHeaders - ((checkFree->block_size <<4) + SF_HEADER_SIZE));  	//moves this to the header on the left
+							alloc_free_h->header.alloc = 0;
+							alloc_free_h->header.block_size = traverseHeaders->header.block_size + checkFree->block_size;
+
+							//Set the new footer
+							checkFree = (sf_footer*)((char*)(alloc_free_h) + ((alloc_free_h->header.block_size <<4) - SF_FOOTER_SIZE)); 
+							checkFree->alloc = 0;
+							checkFree->block_size = alloc_free_h->header.block_size;
+							coalesces++;	
+
+							//******** Set the new freelist_head **************
+							//Set up next and previous for the free header (copy that of the freelist_head)
+							printf("%s%lu\n", "# of coalesces: ", coalesces);	
+							alloc_free_h->next = freelist_head;
+							alloc_free_h->prev = NULL;
+
+							//Now set the freelist_head to this new free header.
+							freelist_head->prev = alloc_free_h;
+							freelist_head = alloc_free_h;
+
+							printf("%s%d\n", "# of block size: ", alloc_free_h->header.block_size <<4);
+
+							//Add the free bytes to the external variable and subtract from internal.
+							external+= (alloc_free_h->header.block_size <<4);
+							internal-= (SF_HEADER_SIZE + SF_FOOTER_SIZE);   //somehow include PADDING
+							printf("%s%lu\n", "# of external: ", external);	
+							printf("%s%lu\n", "# of internal: ", internal);						
+
+						}
 					}
 
-					traverseHeaders->next = (sf_free_header*)((char*)freelist_head + total);
-					traverseHeaders->next->header.alloc = 1;
-					traverseHeaders->next->header.block_size = temp->header.block_size - (total>>4);
-					return sf_fillAlloc(payload, padding, total, temp);
-					//Set allocated memory to new free block and return that payload address.
-					//return sf_fillAlloc(payload,padding,total);
+					//Already coalseced if necessary. Now add divide up this free block.
 
+					printf("%s%d\n", "traverseheader size: ", traverseHeaders->header.block_size<<4);
+
+					if(traverseHeaders->prev != NULL) traverseHeaders->prev->next = traverseHeaders->next;   //set previous block to current's next block
+					if(traverseHeaders->next != NULL) traverseHeaders->next->prev = traverseHeaders->prev;   //set next block to the current's previous block
+
+					sf_free_header* temp = traverseHeaders;
+
+					traverseHeaders->next = freelist_head;
+					traverseHeaders->prev = NULL;
+
+					freelist_head->next = temp;
+				    freelist_head = temp;
+					freelist_head->header.alloc = 0;
+					freelist_head->header.block_size -= temp->header.block_size;
+
+					//Remove the block from the list!! (Put the split block in the from of the listb)
+					return sf_fillAlloc(payload, padding, total, temp);
 
 				}
 
@@ -246,65 +317,85 @@ void sf_free(void *ptr){
 	ptr -= SF_HEADER_SIZE;   //ptr is a payload so we must subtract it to get the header size
 	sf_header* alloc_h  = (sf_header*)(ptr);
 	sf_footer* alloc_f  = (sf_footer*)(ptr + alloc_h->block_size - SF_FOOTER_SIZE);
+	sf_free_header* alloc_free_h = ptr;
 
 	//The address given was allocated! We must free it now.
-	if(alloc_h->alloc == 1)
+	if(alloc_h->alloc == 1 && alloc_h->block_size <<4 >= 16 )
 	{
-		//Check the (left) adjacent footer to see if that's a free block.
-		alloc_f = (sf_footer*)(ptr + SF_HEADER_SIZE);
 
-		//The left is free so we must coalesce it
-		//** CASE 3 or 4 at this point **
-		if(alloc_f->alloc == 0){
+		alloc_h += ((alloc_h->block_size <<4) - SF_HEADER_SIZE);
 
+		//******* COALESCE RIGHT *************
+		if(alloc_h->alloc == 0 && alloc_h->block_size <<4 >= 16)
+		{
 
+			//Set new header
+			alloc_free_h = (sf_free_header*)((char*)alloc_h);  //moves this to the header on the right
+			alloc_h = ptr; 			 //reset the original header to the header of block we currently wanna free
+			alloc_free_h->header.alloc = 0;
+			alloc_free_h->header.block_size += alloc_h->block_size;
+
+			//Set the new footer
+			alloc_f = (sf_footer*)(((char*)alloc_free_h) + alloc_free_h->header.block_size - SF_FOOTER_SIZE); 
+			alloc_f->alloc = 0;
+			alloc_f->block_size = alloc_free_h->header.block_size;
+			coalesces++;
+			printf("%s%lu\n", "# of coalesces: ", coalesces);
 
 		}
 
-		//Now we must check the block on the right
-		//The left block must be allocated so we ignore it and check the header block on the right.
+		alloc_f = (sf_footer*)(ptr - SF_HEADER_SIZE);
+
+		//******* COALESCE LEFT *************
+		if(alloc_f->alloc == 0 && alloc_f->block_size <<4 >= 16)
+		{
+
+			//Set new header
+			alloc_free_h = ptr - ((alloc_f->block_size <<4) + SF_HEADER_SIZE);  	//moves this to the header on the left
+			alloc_h = ptr; 			 							//reset the original header to the header of block we currently wanna free
+			alloc_free_h->header.alloc = 0;
+			alloc_free_h->header.block_size = alloc_h->block_size + alloc_f->block_size;
+
+			//Set the new footer
+			alloc_f = (sf_footer*)(((char*)alloc_free_h) - alloc_free_h->header.block_size + SF_FOOTER_SIZE); 
+			alloc_f->alloc = 0;
+			alloc_f->block_size = alloc_free_h->header.block_size;
+			coalesces++;
+			printf("%s%lu\n", "# of coalesces: ", coalesces);
+
+		}
+
+
+		//******** NO COALESCING **************
 		else
 		{
-			//Update alloc header address to the header to its right.
-			alloc_h += (alloc_h->block_size - SF_HEADER_SIZE);
+			//Replace current header with a free header
+			alloc_h = ptr;
+			alloc_free_h = ptr;
+			alloc_free_h->header.alloc = 0;
+			alloc_free_h->header.block_size = alloc_h->block_size;
 
-			//The right is free so we must coalesce it
-			//** CASE 2 ** since we checked for left prior and it is already allocated.
-			if(alloc_h->alloc == 0)
-			{
-				//
-			}
-
-			//** CASE 1 = neither blocks adjacent to it are free **
-			//Add this block as the freelist_head
-			else
-			{
-				//Replace current header with a free header
-				alloc_h = ptr;
-				sf_free_header* alloc_free_h = ptr;
-				alloc_free_h->header.alloc = 0;
-				alloc_free_h->header.block_size = alloc_h->block_size;
-
-				//Free the footer
-				alloc_f = ptr + alloc_free_h->header.block_size - SF_FOOTER_SIZE;
-				alloc_f->alloc = 0;
-				alloc_f->block_size = alloc_free_h->header.block_size;
-
-				//Set up next and previous for the free header (copy that of the freelist_head)
-				alloc_free_h->next = freelist_head->next;
-				alloc_free_h->prev = freelist_head->prev;
-
-				//Now set the freelist_head to this new free header.
-				freelist_head = alloc_free_h;
-
-				//Add the free bytes to the external variable and subtract from internal.
-				external+= alloc_free_h->header.block_size;
-				internal-= alloc_free_h->header.block_size;
-			}
-
+			//Free the footer
+			alloc_f = ptr + (alloc_free_h->header.block_size <<4) - SF_FOOTER_SIZE;
+			alloc_f->alloc = 0;
+			alloc_f->block_size = alloc_free_h->header.block_size;
 		}
 
-		return;
+		//******** Set the new freelist_head **************
+		//Set up next and previous for the free header (copy that of the freelist_head)
+		alloc_free_h->next = freelist_head;
+		alloc_free_h->prev = NULL;
+
+		//Now set the freelist_head to this new free header.
+		freelist_head->prev = alloc_free_h;
+		freelist_head = alloc_free_h;
+
+
+		//Add the free bytes to the external variable and subtract from internal.
+		external+= alloc_free_h->header.block_size << 4;
+		internal-= alloc_free_h->header.block_size << 4;
+		printf("%s%lu\n", "# of external: ", external);
+
 	}
 
 }
@@ -341,7 +432,7 @@ else
 	meminfo->internal = internal;
 	meminfo->external = external;
 	//meminfo->frees = frees;
-	//meminfo->coalesces= coalesces;
+	meminfo->coalesce = coalesces;
   	return 0;
   }
 }
