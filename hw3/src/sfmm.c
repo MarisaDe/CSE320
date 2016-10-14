@@ -11,8 +11,8 @@
  */
 
 sf_free_header* freelist_head = NULL;
-static unsigned int long internal = 0;
-static unsigned int long external = 0;
+static unsigned int long internal = 0;	//header + footer + padding (allocated blocks only)
+static unsigned int long external = 0;  //sum of block_size for all blocks in the free list
 static unsigned int long allocations = 0;
 static unsigned int long frees = 0;
 static unsigned int long coalesces = 0;
@@ -43,8 +43,6 @@ void *sf_fillAlloc(int payload, int padding, int total, sf_free_header* temp)
 	void *mem;
   	//sets mem pointer to the alloc head block to return later.
 	mem = alloc_head;
-	printf("%s%p\n", "MEM: ", mem);
-
 	printf("%s%d\n", "freelist block size: ", freelist_head->header.block_size<<4);
 	//sets values for the alloc footer
 	sf_footer *alloc_footer = (sf_footer*)((char*)alloc_head + payload + SF_HEADER_SIZE);
@@ -63,11 +61,10 @@ void *sf_fillAlloc(int payload, int padding, int total, sf_free_header* temp)
 	printf("%s%p\n", "free header address ", freelist_head);
 	printf("%s%p\n", "free footer address: ", freelist_foot);
 
-	//Returns payload address by increasing the pointer by size of the header block.
+	//Returns allocated payload address by increasing the pointer by size of the header block.
 	allocations++;
 	internal += SF_HEADER_SIZE + SF_FOOTER_SIZE + padding;
-	printf("%s%d\n", "padding: ", padding);
-	external = freelist_head->header.block_size << 4;
+	external += freelist_head->header.block_size << 4;
 	printf("%s%lu\n", "# of internal bytes: ", internal);
 	printf("%s%lu\n", "# of free bytes (external): ", external);
 	printf("%s%lu\n", "# of allocs: ", allocations);
@@ -88,6 +85,11 @@ void *coalescePrevious(sf_free_header* traverseHeaders)
 	//this header will not always be the one previously adjacent to the new sbrk call
 	printf("%s%p\n", "temp footer is: ", ((char*)temp + ((temp->header.block_size <<4) - SF_HEADER_SIZE)));
 	traverseHeaders = sf_sbrk(1);
+	if(traverseHeaders == (void*)-1)
+	{
+		errno = ENOMEM;
+		return NULL;
+	}
 
 	//traverseHeaders is the new block which will be 4096 when expanding the heap.
 	traverseHeaders->header.block_size = (4096 >> 4);
@@ -108,12 +110,7 @@ void *coalescePrevious(sf_free_header* traverseHeaders)
 		alloc_free_h->header.block_size = traverseHeaders->header.block_size + checkFree->block_size;
 
 		printf("%s%d\n", "New coalesced header size: ", alloc_free_h->header.block_size << 4);
-
-		//Set the new footer!! Always seems to be off by 10 bytes
-		checkFree = (sf_footer*)((char*)(alloc_free_h) + ((alloc_free_h->header.block_size <<4) - SF_FOOTER_SIZE)); 
-		checkFree->alloc = 0;
-		checkFree->block_size = alloc_free_h->header.block_size;
-		coalesces++;	
+	
 
 		//******** Set the new freelist_head **************
 		//Set up next and previous for the free header (copy that of the freelist_head)
@@ -140,6 +137,14 @@ void *coalescePrevious(sf_free_header* traverseHeaders)
 		freelist_head->prev = alloc_free_h;
 		freelist_head = alloc_free_h;
 
+
+		//Set the new footer!! Always seems to be off by 10 bytes
+		checkFree = (sf_footer*)((char*)freelist_head + (freelist_head->header.block_size <<4) - SF_FOOTER_SIZE);
+		checkFree->alloc = 0;
+		checkFree->block_size = freelist_head->header.block_size;
+		coalesces++;
+
+
 		//printf("%s%d\n", "# of block size h : ", alloc_free_h->header.block_size <<4);
 		//printf("%s%d\n", "# of block size f : ", checkFree->block_size <<4);
 
@@ -148,8 +153,6 @@ void *coalescePrevious(sf_free_header* traverseHeaders)
 		//internal-= (SF_HEADER_SIZE + SF_FOOTER_SIZE);   //somehow include PADDING
 		//printf("%s%lu\n", "# of external: ", external);	
 		//printf("%s%lu\n", "# of internal: ", internal);		
-
-		//Reset traverseHeaders because the list changed.
 
 		// Snapshot the freelist
     	printf("=== TESTING: Perform a snapshot ===================\n");
@@ -215,6 +218,12 @@ else
 //If there are no free header blocks, create space for it./////////////////////////////////////////////
 if(freelist_head == NULL){
 	freelist_head = sf_sbrk(1);
+	if(freelist_head == (void*)-1)
+	{
+		errno = ENOMEM;
+		return NULL;
+	}
+
 	initFree();
 
 	temp = freelist_head;
@@ -232,7 +241,7 @@ if(freelist_head == NULL){
 else
 {
 	sf_free_header *traverseHeaders = freelist_head;
-	printf("%s\n", "Freelist_head is not null.");
+	printf("%s\n", "--Freelist_head is not null.--");
 
 ////////Found space somwhere in the freelist to allocate memory //////////////////////////////////////
 while(traverseHeaders!= NULL){	
@@ -241,6 +250,9 @@ while(traverseHeaders!= NULL){
 	{
 		if(traverseHeaders == freelist_head)
 		{
+			///////////MAYBE ALLOCATE FIRST THEN MOVE NEW FREE HEADER //////////////
+			////////////////////////////////////////////////////////////////////////
+
 			//sf_free_header* oldValue = traverseHeaders;
 			sf_free_header* next = traverseHeaders->next;
 			freelist_head = (sf_free_header*)((char*)traverseHeaders + total);
@@ -282,19 +294,19 @@ while(traverseHeaders!= NULL){
 
 ////////Went through whole list and no space was adequate. Must get more from heap. ////////////////////
 	else if(traverseHeaders->next == NULL )
-		{
-			while(size > traverseHeaders->header.block_size <<4 && traverseHeaders->next == NULL)
-			{	
-				// Snapshot the freelist
-    			printf("******************TESTING THE FREELIST *************************\n");
-    			sf_snapshot(true);
-				traverseHeaders = coalescePrevious(traverseHeaders);
-				//Updated freelist. Must check again if we have enough space!.
-				sf_malloc(size);									
+		{	
+			// Snapshot the freelist
+			printf("******************TESTING THE FREELIST *************************\n");
+			sf_snapshot(true);
+			traverseHeaders = coalescePrevious(traverseHeaders);
+			if (traverseHeaders == NULL)
+			{
+				errno = ENOMEM;
+				return NULL;
 			}
 
 			//Already coalseced if necessary. Now divide up this free block.
-			return sf_malloc(size);
+			return sf_malloc(size);									
 		}
 	traverseHeaders = traverseHeaders->next;
 	}
@@ -434,6 +446,22 @@ void sf_free(void *ptr){
  * accordingly.
  */
 void *sf_realloc(void *ptr, size_t size){
+
+// BASE CASES ///////////////////////////////////////////////
+
+if (size == 0) return NULL;
+if (size > 16384)		//If size > 4 pages, error occurs.
+{		
+	errno = EINVAL;
+	return NULL;
+}
+
+
+
+
+
+
+
   return NULL;
 }
 
