@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
 
     // Allocate more memory
     printf("=== Test7: 8192 byte allocation ===\n");
-    void *memory = sf_malloc(8192);
+    void *memory = sf_malloc(2);
     sf_snapshot(true);
     sf_varprint(memory);
     printf("=== Free list ===\n");
