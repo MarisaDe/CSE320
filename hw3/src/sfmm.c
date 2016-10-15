@@ -324,13 +324,8 @@ while(traverseHeaders!= NULL){
 ////////Went through whole list and no space was adequate. Must get more from heap. ////////////////////
 	else if(traverseHeaders->next == NULL )
 		{	
-			// Snapshot the freelist
-			//printf("******************TESTING THE FREELIST *************************\n");
-			//sf_snapshot(true);
 			traverseHeaders = ExpandAndCoalescePrevious();
-			external+= (traverseHeaders->header.block_size <<4);
-			internal-= (SF_HEADER_SIZE + SF_FOOTER_SIZE + padding);   
-
+ 
 			if (traverseHeaders == NULL)
 			{
 				errno = ENOMEM;
@@ -363,7 +358,7 @@ void sf_free(void *ptr){
 
 	ptr -= SF_HEADER_SIZE;   							//ptr is a payload so we must subtract it to get the header size
 	sf_free_header* alloc_h  = (sf_free_header*)((char*)(ptr));
-	
+
 	//Update internal right away
 	internal-= (alloc_h->header.padding_size + SF_FOOTER_SIZE + SF_HEADER_SIZE);
 	sf_footer* alloc_f  = (sf_footer*)((char*)(ptr) + (alloc_h->header.block_size <<4) - SF_FOOTER_SIZE);

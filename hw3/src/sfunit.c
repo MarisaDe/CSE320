@@ -128,7 +128,6 @@ Test(sf_memsuite, Coalesce_Left, .init = sf_mem_init, .fini = sf_mem_fini) {
     void *x = sf_malloc(54);
     void *y = sf_malloc(54);
     sf_malloc(54);
-    //memset(y, 0xFF, 54);
     sf_free(x);
     sf_free(y);
     cr_assert(freelist_head == x-8);
@@ -150,5 +149,30 @@ Test(sf_memsuite, Coalesce_Left, .init = sf_mem_init, .fini = sf_mem_fini) {
     info keepTrack;
     sf_info(&keepTrack);
     cr_assert(keepTrack.coalesce == 1, "There should have only been 1 coalesce!\n");
+}
+
+//Check if expanding the heap works
+Test(sf_memsuite, Expand_heap, .init = sf_mem_init, .fini = sf_mem_fini) {
+    void *x = sf_malloc(75);
+    void *y = sf_malloc(5000);
+
+    sf_header* headerx = (sf_header*) (x - 8);
+    sf_footer* footofx = (sf_footer*) (x - 8 + (headerx->block_size << 4) - 8);
+    sf_header* headery = (sf_header*) (y - 8);
+    sf_footer* footofy = (sf_footer*) (y - 8 + (headery->block_size << 4) - 8);
+
+    cr_assert(headerx->block_size << 4 == 96, "First value header not correctly malloced.\n");
+    cr_assert(footofx->block_size << 4 == 96, "First value footer was not correctly malloced.\n");
+
+    cr_assert(headery->block_size << 4 == 5024, "Second value header was not correctly malloced.\n");
+    cr_assert(footofy->block_size << 4 == 5024, "Second value footer was not correctly malloced.\n");
+
+    //Make sure coalescing actually happened
+    info keepTrack;
+    sf_info(&keepTrack);
+    cr_assert(keepTrack.coalesce == 1, "There should have only been 1 coalesce! (coalescing by expanding the heap)\n");
+    cr_assert(keepTrack.external == 3072, "There should be 3076 free (external) bytes in the freelist.\n");
+    cr_assert(keepTrack.internal == 45, "There should be 45 internal bytes in the freelist.\n");
+
 
 }
