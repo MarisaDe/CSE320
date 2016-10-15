@@ -121,8 +121,8 @@ void *ExpandAndCoalescePrevious()
 
 		if(alloc_free_h == freelist_head)
 		{
-			printf(" ^^^^^^^^^^^^^^^6 ExpandAndCoalescePrevious Snapshot ^^^^^^^^^^^^^^^\n");
-    		sf_snapshot(true);
+			//printf(" ^^^^^^^^^^^^^^^6 ExpandAndCoalescePrevious Snapshot ^^^^^^^^^^^^^^^\n");
+    		//sf_snapshot(true);
 			coalesces++;
 			return freelist_head;
 		}
@@ -150,8 +150,8 @@ void *ExpandAndCoalescePrevious()
 		//printf("%s%lu\n", "# of internal: ", internal);		
 
 		// Snapshot the freelist
-    	printf(" &&&&&&&&&&&&&&&&&&&&&&&&&&&&  ExpandAndCoalescePrevious Snapshot &&&&&&&&&\n");
-    	sf_snapshot(true);
+    	//printf(" &&&&&&&&&&&&&&&&&&&&&&&&&&&&  ExpandAndCoalescePrevious Snapshot &&&&&&&&&\n");
+    	//sf_snapshot(true);
 
 		printf("%s%p\n", "New coalesced footer: ", checkFree);
 		coalesces++;
@@ -332,7 +332,7 @@ void sf_free(void *ptr){
 	//The address given was allocated! We must free it now.
 	if(alloc_h->header.alloc == 1 && alloc_f->alloc == 1 )  //header and footer match
 	{
-		bool coal = 0;
+		int coal = 0;
 		alloc_h = (sf_free_header*)(((char*)alloc_h) + (alloc_free_h->header.block_size<<4));  //get header on the right
 
 		//******* COALESCE RIGHT *************
@@ -350,58 +350,93 @@ void sf_free(void *ptr){
 			alloc_f = (sf_footer*)(((char*)alloc_free_h) + (alloc_free_h->header.block_size<<4) - SF_FOOTER_SIZE); 
 			alloc_f->alloc = 0;
 			alloc_f->block_size = alloc_free_h->header.block_size;
+
+			alloc_free_h->next = alloc_h->next;
+			alloc_free_h->prev = alloc_h->next;
+			alloc_h->next = NULL;
+			alloc_h->prev = NULL;
+
+			//Reset free block header size to 0 since will no longer be a header
+			alloc_h->header.block_size = 0;
+
+			//Increase coalesce counter
 			coalesces++;
 			printf("%s%lu\n", "# of coalesces: ", coalesces);
-
-			if(ptr != freelist_head) 		 
-			{
-				if(alloc_free_h->prev != NULL)
-				{
-			 		alloc_free_h->prev->next = alloc_free_h->next;
-			 	}
-			 	if(alloc_free_h->next != NULL)
-			 	{
-			 		alloc_free_h->next->prev = alloc_free_h->prev;
-			 	}
-		 	}
-		 	else
-		 		return; 
-
 		}
 
 		alloc_f = (sf_footer*)((char*)ptr - SF_HEADER_SIZE);
 
 		//******* COALESCE LEFT *************
-		if(alloc_f->alloc == 0 && alloc_f->block_size >= 32) //there is something in the footer!
+		if(alloc_f->alloc == 0 && alloc_f->block_size <<4 >= 32) //there is something in the footer!
 		{
-			coal = 1;	
-			//Set new header
-			alloc_free_h = (sf_free_header*)((char*)ptr - ((alloc_f->block_size <<4) + SF_HEADER_SIZE));  	//moves this to the header on the left
-			alloc_h = (sf_free_header*)((char*)ptr); 			 							//reset the original header to the header of block we currently wanna free
-			alloc_free_h->header.alloc = 0;
-			alloc_free_h->header.block_size = alloc_h->header.block_size + alloc_f->block_size;
-
-			//Set the new footer
-			alloc_f = (sf_footer*)(((char*)alloc_free_h) - (alloc_free_h->header.block_size<<4) + SF_FOOTER_SIZE); 
-			alloc_f->alloc = 0;
-			alloc_f->block_size = alloc_free_h->header.block_size;
-			coalesces++;
-			printf("%s%lu\n", "# of coalesces: ", coalesces);
-
-			if(alloc_free_h->prev != NULL)
+			if(coal == 0)
 			{
-		 		alloc_free_h->prev->next = alloc_free_h->next;
-		 	}
-		 	if(alloc_free_h->next != NULL)
-		 	{
-		 		alloc_free_h->next->prev = alloc_free_h->prev;
-		 	}
+				coal = 1;
+				//Set new header
+				alloc_h = ptr; 
+				alloc_free_h = (sf_free_header*)(((char*)alloc_f) - (alloc_f->block_size<<4) + SF_HEADER_SIZE);  //moves this to the header on the left
+				alloc_free_h->header.alloc = 0;
+				alloc_free_h->header.block_size += alloc_h->header.block_size;
+
+				//Set the new footer
+				alloc_f = (sf_footer*)(((char*)alloc_free_h) + (alloc_free_h->header.block_size<<4) - SF_FOOTER_SIZE); 
+				alloc_f->alloc = 0;
+				alloc_f->block_size = alloc_free_h->header.block_size;
+
+				//Reset free block header size to 0 since will no longer be a header.
+				alloc_h->header.block_size = 0;
+
+				alloc_h->next = NULL;
+				alloc_h = alloc_free_h;
+
+
+				coalesces++;
+				printf("%s%lu\n", "# of coalesces: ", coalesces);
+			}
+			else
+			{
+				coal = 2;
+				//Set new header
+				alloc_h = ptr; 
+				alloc_free_h = (sf_free_header*)(((char*)ptr) - (alloc_f->block_size<<4));  //moves this to the header on the left
+				alloc_free_h->header.alloc = 0;
+				alloc_free_h->header.block_size = alloc_f->block_size + alloc_h->header.block_size;
+
+				//Set the new footer
+				alloc_f = (sf_footer*)(((char*)alloc_free_h) + (alloc_free_h->header.block_size<<4) - SF_FOOTER_SIZE); 
+				alloc_f->alloc = 0;
+				alloc_f->block_size = alloc_free_h->header.block_size;
+
+				//Reset free block header size to 0 since will no longer be a header
+				alloc_h->header.block_size = 0;
+
+				alloc_free_h->next = alloc_h->next;
+				alloc_free_h->prev = alloc_h->next;
+				alloc_h->next = NULL;
+				alloc_h = alloc_free_h;
+
+				//Increase coalesce counter
+				coalesces++;
+				printf("%s%lu\n", "# of coalesces: ", coalesces);
+
+			}
+
+
+
+			// if(alloc_free_h->prev != NULL)
+			// {
+		 // 		alloc_free_h->prev->next = alloc_free_h->next;
+		 // 	}
+		 // 	if(alloc_free_h->next != NULL)
+		 // 	{
+		 // 		alloc_free_h->next->prev = alloc_free_h->prev;
+		 // 	}
 
 		}
 
 
 		//******** NO COALESCING **************
-		else if(coal != 1)
+		else if(coal == 0)
 		{
 			//Replace current header with a free header and free the footer
 			alloc_free_h = (sf_free_header*)((char*)ptr);
@@ -414,7 +449,9 @@ void sf_free(void *ptr){
 
 		//Set up next and previous for the free header (copy that of the freelist_head)
 
-		alloc_free_h->next = freelist_head;
+		if(alloc_h == freelist_head) alloc_free_h->next = freelist_head->next;
+		else alloc_free_h->next = freelist_head;
+
 		alloc_free_h->prev = NULL;
 
 		//Now set the freelist_head to this new free header.
@@ -426,6 +463,7 @@ void sf_free(void *ptr){
 		external+= alloc_free_h->header.block_size << 4;
 		internal-= alloc_free_h->header.block_size << 4;
 		frees++;
+		return;
 
 	}
 
