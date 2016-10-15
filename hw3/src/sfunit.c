@@ -176,3 +176,26 @@ Test(sf_memsuite, Expand_heap, .init = sf_mem_init, .fini = sf_mem_fini) {
 
 
 }
+
+
+// Fill exactly 1 heap space
+Test(sf_memsuite, Fill_Heap, .init = sf_mem_init, .fini = sf_mem_fini) {
+    void *x = sf_malloc(4080);
+
+    sf_header* headerx = (sf_header*) (x - 8);
+    sf_footer* footofx = (sf_footer*) (x - 8 + (headerx->block_size << 4) - 8);
+
+    cr_assert(headerx->block_size << 4 == 4096, "First value header not correctly malloced.\n");
+    cr_assert(freelist_head == NULL, "Freelist should be NULL since there is no free space.\n");
+    cr_assert(footofx->block_size << 4 == 4096, "First value footer was not correctly malloced.\n");
+
+
+    //Make sure fragmentation is correct
+    info keepTrack;
+    sf_info(&keepTrack);
+    cr_assert(keepTrack.coalesce == 0, "There should have been no coalescing.\n");
+    cr_assert(keepTrack.external == 0, "There should be 3076 free (external) bytes in the freelist.\n");
+    cr_assert(keepTrack.internal == 16, "There should be 45 internal bytes in the freelist.\n");
+
+
+}

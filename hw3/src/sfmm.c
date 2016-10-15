@@ -61,25 +61,23 @@ void *sf_fillAlloc(int payload, int padding, int total, sf_free_header* fill)
 	void *mem;
   	//sets mem pointer to the alloc head block to return later.
 	mem = alloc_head;
-	printf("%s%d\n", "freelist block size: ", freelist_head->header.block_size<<4);
 	//sets values for the alloc footer
 	sf_footer *alloc_footer = (sf_footer*)((char*)(alloc_head) + payload + SF_HEADER_SIZE);
 	alloc_footer->alloc = 1;
 	alloc_footer->block_size = total >> 4;
 	printf("%s%d\n", "alloc footer size: ", alloc_footer->block_size<<4);
 	printf("%s%p\n", "footer address ", alloc_footer);
-	printf("%s%d\n", "fill block size: ", freelist_head->header.block_size<<4);
-	//Move the freelist_header pointer to the next free block
-	//freelist_head = (sf_free_header*)((char*)alloc_footer + SF_FOOTER_SIZE);
 
 	//set footer for freelist
-	sf_footer *freelist_foot = (sf_footer*)((char*)freelist_head + (freelist_head->header.block_size <<4) - SF_FOOTER_SIZE);
-	freelist_foot->alloc = 0;
-	freelist_foot->block_size = freelist_head->header.block_size;
-	printf("%s%p\n", "free header address ", freelist_head);
-	printf("%s%p\n", "free footer address: ", freelist_foot);
-
-	freelist_head->header.padding_size = 0;
+	if(freelist_head !=NULL)
+	{
+		sf_footer *freelist_foot = (sf_footer*)((char*)freelist_head + (freelist_head->header.block_size <<4) - SF_FOOTER_SIZE);
+		freelist_foot->alloc = 0;
+		freelist_foot->block_size = freelist_head->header.block_size;
+		printf("%s%p\n", "free header address ", freelist_head);
+		printf("%s%p\n", "free footer address: ", freelist_foot);
+		freelist_head->header.padding_size = 0;
+	}
 	//Returns allocated payload address by increasing the pointer by size of the header block.
 	allocations++;
 	internal += SF_HEADER_SIZE + SF_FOOTER_SIZE + padding;
@@ -245,6 +243,9 @@ if(freelist_head == NULL){
 	freelist_head->header.block_size = temp->header.block_size - (total>>4);
 	printf("%s%d\n", "freelist: ", freelist_head->header.block_size<<4);
 
+	if(total == 4096){
+		freelist_head = NULL;
+	}
 	return sf_fillAlloc(payload, padding, total, temp);
 }
 
