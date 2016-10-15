@@ -341,8 +341,8 @@ void sf_free(void *ptr){
 
 			coal = 1;	
 			//Set new header
-			alloc_free_h = ptr;  						 //reset to original ptr to free
-			alloc_h = (sf_free_header*)((char*)alloc_h); //moves this to the header on the right			 
+			alloc_h = (sf_free_header*)((char*)alloc_h); //moves this to the header on the right	
+			alloc_free_h = ptr;  						 //reset to original ptr to free		 
 			alloc_free_h->header.alloc = 0;
 			alloc_free_h->header.block_size += alloc_h->header.block_size;
 
@@ -353,7 +353,7 @@ void sf_free(void *ptr){
 			coalesces++;
 			printf("%s%lu\n", "# of coalesces: ", coalesces);
 
-			if(alloc_h != freelist_head) 		 
+			if(ptr != freelist_head) 		 
 			{
 				if(alloc_free_h->prev != NULL)
 				{
@@ -365,7 +365,7 @@ void sf_free(void *ptr){
 			 	}
 		 	}
 		 	else
-		 		return; //there cant be anything to the left of the head
+		 		return; 
 
 		}
 
@@ -388,19 +388,14 @@ void sf_free(void *ptr){
 			coalesces++;
 			printf("%s%lu\n", "# of coalesces: ", coalesces);
 
-			if(alloc_h != freelist_head) 		 
+			if(alloc_free_h->prev != NULL)
 			{
-				if(alloc_free_h->prev != NULL)
-				{
-			 		alloc_free_h->prev->next = alloc_free_h->next;
-			 	}
-			 	if(alloc_free_h->next != NULL)
-			 	{
-			 		alloc_free_h->next->prev = alloc_free_h->prev;
-			 	}
-			}
-			else		 		
-				return;
+		 		alloc_free_h->prev->next = alloc_free_h->next;
+		 	}
+		 	if(alloc_free_h->next != NULL)
+		 	{
+		 		alloc_free_h->next->prev = alloc_free_h->prev;
+		 	}
 
 		}
 
