@@ -97,9 +97,15 @@ Test(sf_memsuite, Coalesce_Right, .init = sf_mem_init, .fini = sf_mem_fini) {
     cr_assert(headofx->header.block_size << 4 == 80);
     cr_assert(headofx->header.padding_size == 10);
 
+    //Make sure coalescing actually happened
+    info keepTrack;
+    sf_info(&keepTrack);
+    cr_assert(keepTrack.coalesce == 1, "There should have only been 1 coalesce!\n");
+
+
 }
 
-//Check to see if info stats are correct
+//Check to see if info stats are correct by placing an exact value in the free space.
 Test(sf_memsuite, Info_Test, .init = sf_mem_init, .fini = sf_mem_fini) {
 
     int *value1 = sf_malloc(sizeof(int));
@@ -114,5 +120,35 @@ Test(sf_memsuite, Info_Test, .init = sf_mem_init, .fini = sf_mem_fini) {
     cr_assert(keepTrack.external == 4032, "# of external bytes incorrect!\n");
     cr_assert(keepTrack.internal == 54, "# of internal bytes incorrect!\n");
     cr_assert(keepTrack.coalesce == 0, "# of coalesces is incorrect!\n");
+
+}
+
+//Check to see if coalescing to the left only works.
+Test(sf_memsuite, Coalesce_Left, .init = sf_mem_init, .fini = sf_mem_fini) {
+    void *x = sf_malloc(54);
+    void *y = sf_malloc(54);
+    sf_malloc(54);
+    //memset(y, 0xFF, 54);
+    sf_free(x);
+    sf_free(y);
+    cr_assert(freelist_head == x-8);
+    sf_free_header *headofx = (sf_free_header*) (x-8);
+    sf_footer *footofx = (sf_footer*) (y - 8 + (headofx->header.block_size << 4)) - 8;
+    //sf_footer *footofx = (sf_footer*) (x - 8 + (headofx->header.block_size << 4)) - 8;
+
+    sf_blockprint((sf_free_header*)((void*)y-8));
+    // All of the below should be true if there was was right coalescing
+    cr_assert(headofx->header.alloc == 0, "First value should have been freed\n");
+    cr_assert(headofx->header.block_size << 4 == 160);
+    cr_assert(headofx->header.padding_size == 0);
+
+    //old value of y
+    cr_assert(footofx->alloc == 0, "Coalesced footer did not match its header!\n");
+    cr_assert(footofx->block_size << 4 == 0);
+
+    //Make sure coalescing actually happened
+    info keepTrack;
+    sf_info(&keepTrack);
+    cr_assert(keepTrack.coalesce == 1, "There should have only been 1 coalesce!\n");
 
 }
