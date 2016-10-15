@@ -41,22 +41,24 @@ Test(sf_memsuite, Check_next_prev_pointers_of_free_block_at_head_of_list, .init 
     cr_assert(freelist_head->prev == NULL);
 }
 
+
 Test(sf_memsuite, Coalesce_no_coalescing, .init = sf_mem_init, .fini = sf_mem_fini) {
-    int *x = sf_malloc(4);
-    int *y = sf_malloc(4);
+    void *x = sf_malloc(4);
+    void *y = sf_malloc(4);
     memset(y, 0xFF, 4);
     sf_free(x);
-    cr_assert(freelist_head == (void*)x-8);
-    sf_free_header *headofx = (sf_free_header*) x-8;
-    sf_footer *footofx = (sf_footer*) (x + headofx->header.block_size) - 8;
+    cr_assert(freelist_head == x-8);
+    sf_free_header *headofx = (sf_free_header*) (x-8);
+    sf_footer *footofx = (sf_footer*) (x - 8 + (headofx->header.block_size << 4)) - 8;
 
+    sf_blockprint((sf_free_header*)((void*)x-8));
     // All of the below should be true if there was no coalescing
     cr_assert(headofx->header.alloc == 0);
-    cr_assert(headofx->header.block_size == 32);
-    cr_assert(headofx->header.padding_size == 15);
+    cr_assert(headofx->header.block_size << 4 == 32);
+    cr_assert(headofx->header.padding_size == 0);
 
     cr_assert(footofx->alloc == 0);
-    cr_assert(footofx->block_size == 32);
+    cr_assert(footofx->block_size << 4 == 32);
 }
 
 /*
@@ -65,3 +67,33 @@ Test(sf_memsuite, Coalesce_no_coalescing, .init = sf_mem_init, .fini = sf_mem_fi
 // DO NOT DELETE THESE COMMENTS
 //############################################
 */
+
+Test(sf_memsuite, Coalesce_Right, .init = sf_mem_init, .fini = sf_mem_fini) {
+    void *x = sf_malloc(54);
+    void *y = sf_malloc(54);
+    //memset(y, 0xFF, 54);
+    sf_free(y);
+    cr_assert(freelist_head == y-8);
+    sf_free_header *headofy = (sf_free_header*) (y-8);
+    sf_free_header *headofx = (sf_free_header*) (x-8);
+    sf_footer *footofy = (sf_footer*) (y - 8 + (headofy->header.block_size << 4)) - 8;
+    //sf_footer *footofx = (sf_footer*) (x - 8 + (headofx->header.block_size << 4)) - 8;
+
+    sf_blockprint((sf_free_header*)((void*)y-8));
+    // All of the below should be true if there was was right coalescing
+    cr_assert(headofy->header.alloc == 0, "Second value should NOT still be allocated!\n");
+    cr_assert(headofy->header.block_size << 4 == 4016);
+    cr_assert(headofy->header.padding_size == 0);
+
+    //old value of y
+    cr_assert(footofy->alloc == 0, "Coalesced footer did not match its header!\n");
+    cr_assert(footofy->block_size << 4 == 0);
+
+
+    //x should still be allocated
+    cr_assert(headofx->header.alloc == 1, "First value should still be allocated!\n");
+    cr_assert(headofx->header.block_size << 4 == 80);
+    cr_assert(headofx->header.padding_size == 10);
+
+
+}
