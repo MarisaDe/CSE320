@@ -68,6 +68,8 @@ Test(sf_memsuite, Coalesce_no_coalescing, .init = sf_mem_init, .fini = sf_mem_fi
 //############################################
 */
 
+
+//Check to see if coalescing to the right only works.
 Test(sf_memsuite, Coalesce_Right, .init = sf_mem_init, .fini = sf_mem_fini) {
     void *x = sf_malloc(54);
     void *y = sf_malloc(54);
@@ -94,6 +96,24 @@ Test(sf_memsuite, Coalesce_Right, .init = sf_mem_init, .fini = sf_mem_fini) {
     cr_assert(headofx->header.alloc == 1, "First value should still be allocated!\n");
     cr_assert(headofx->header.block_size << 4 == 80);
     cr_assert(headofx->header.padding_size == 10);
+
+}
+
+//Check to see if info stats are correct
+Test(sf_memsuite, Info_Test, .init = sf_mem_init, .fini = sf_mem_fini) {
+
+    int *value1 = sf_malloc(sizeof(int));
+    sf_malloc(sizeof(long));
+    sf_free(value1);
+    sf_malloc(2);
+
+    info keepTrack;
+    sf_info(&keepTrack);
+    cr_assert(keepTrack.allocations == 3, "# of allocs made is incorrect\n");
+    cr_assert(keepTrack.frees == 1, "# of frees made is incorrect!\n");
+    cr_assert(keepTrack.external == 4032, "# of external bytes incorrect!\n");
+    cr_assert(keepTrack.internal == 30, "# of internal bytes incorrect!\n");
+
 
 
 }
