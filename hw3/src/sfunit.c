@@ -112,8 +112,7 @@ Test(sf_memsuite, Info_Test, .init = sf_mem_init, .fini = sf_mem_fini) {
     cr_assert(keepTrack.allocations == 3, "# of allocs made is incorrect\n");
     cr_assert(keepTrack.frees == 1, "# of frees made is incorrect!\n");
     cr_assert(keepTrack.external == 4032, "# of external bytes incorrect!\n");
-    cr_assert(keepTrack.internal == 30, "# of internal bytes incorrect!\n");
-
-
+    cr_assert(keepTrack.internal == 54, "# of internal bytes incorrect!\n");
+    cr_assert(keepTrack.coalesce == 0, "# of coalesces is incorrect!\n");
 
 }
