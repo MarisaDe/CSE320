@@ -356,7 +356,6 @@ void sf_free(void *ptr){
 	}
 
 	//Must check the bits of that address to make sure that memory was allocated
-
 	ptr -= SF_HEADER_SIZE;   							//ptr is a payload so we must subtract it to get the header size
 	sf_free_header* alloc_h  = (sf_free_header*)((char*)(ptr));
 

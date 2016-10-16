@@ -199,3 +199,15 @@ Test(sf_memsuite, Fill_Heap, .init = sf_mem_init, .fini = sf_mem_fini) {
 
 
 }
+
+// Use an invalid pointer for freeing.
+Test(sf_memsuite, Handle_Invalid_Free, .init = sf_mem_init, .fini = sf_mem_fini) {
+    sf_malloc(75);
+    void *y = sf_malloc(1000);
+    sf_free(y-8);
+
+    //Freelist_head should not have moved.
+    cr_assert(freelist_head != y-8, "Freelist_head should have stayed the same as it was after the second malloc.\n");
+
+
+}
