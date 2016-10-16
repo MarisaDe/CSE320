@@ -213,7 +213,7 @@ Test(sf_memsuite, Handle_Invalid_Free, .init = sf_mem_init, .fini = sf_mem_fini)
 }
 
 // Basic remallocing to a size bigger.
-Test(sf_memsuite, RemallocIt, .init = sf_mem_init, .fini = sf_mem_fini) {
+Test(sf_memsuite, Remalloc1, .init = sf_mem_init, .fini = sf_mem_fini) {
     int *value1 = sf_malloc(sizeof(int));
     *value1 = 4;
     cr_assert(*value1 == 4, "Failed to properly sf_malloc space for an integer!");
@@ -222,6 +222,24 @@ Test(sf_memsuite, RemallocIt, .init = sf_mem_init, .fini = sf_mem_fini) {
     sf_realloc(value1, 54);
     cr_assert(*value1 == 4, "Failed to properly sf_remalloc space for an integer!");
     sf_blockprint((sf_free_header*)((void*)value1-8));
+    sf_snapshot(true);
+}
+
+// Remallocing to a size bigger when there is allocated space next to the block we want to remalloc
+Test(sf_memsuite, Remalloc2, .init = sf_mem_init, .fini = sf_mem_fini) {
+    int *value1 = sf_malloc(sizeof(int));
+    *value1 = 4;
+    sf_blockprint((sf_free_header*)((void*)value1-8));
+    sf_snapshot(true);
+    int *value2 = sf_malloc(sizeof(int));
+    *value2 = 4;
+    cr_assert(*value1 == 4, "Failed to properly sf_malloc space for an integer!");
+    sf_blockprint((sf_free_header*)((void*)value2-8));
+    sf_snapshot(true);
+    sf_realloc(value1, 100);
+    cr_assert(freelist_head->header.block_size << 4 == 3904, "New freelist_head should be heap space - the remalloc size! (3904)");
+    sf_blockprint((sf_free_header*)((void*)value1-8));
+    sf_blockprint((sf_free_header*)((void*)value2-8));
     sf_snapshot(true);
 
 

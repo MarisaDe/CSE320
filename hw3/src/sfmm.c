@@ -65,8 +65,6 @@ void *sf_fillAlloc(int payload, int padding, int total, sf_free_header* fill)
 	sf_footer *alloc_footer = (sf_footer*)((char*)(alloc_head) + payload + SF_HEADER_SIZE);
 	alloc_footer->alloc = 1;
 	alloc_footer->block_size = total >> 4;
-	printf("%s%d\n", "alloc footer size: ", alloc_footer->block_size<<4);
-	printf("%s%p\n", "footer address ", alloc_footer);
 
 	//set footer for freelist
 	if(freelist_head !=NULL)
@@ -74,18 +72,12 @@ void *sf_fillAlloc(int payload, int padding, int total, sf_free_header* fill)
 		sf_footer *freelist_foot = (sf_footer*)((char*)freelist_head + (freelist_head->header.block_size <<4) - SF_FOOTER_SIZE);
 		freelist_foot->alloc = 0;
 		freelist_foot->block_size = freelist_head->header.block_size;
-		printf("%s%p\n", "free header address ", freelist_head);
-		printf("%s%p\n", "free footer address: ", freelist_foot);
 		freelist_head->header.padding_size = 0;
 	}
 	//Returns allocated payload address by increasing the pointer by size of the header block.
 	allocations++;
 	internal += SF_HEADER_SIZE + SF_FOOTER_SIZE + padding;
 	updateExternal();
-	printf("%s%lu\n", "# of internal bytes: ", internal);
-	printf("%s%lu\n", "# of free bytes (external): ", external);
-	printf("%s%lu\n", "# of allocs: ", allocations);
-	printf("%s%lu\n", "# of frees: ", frees);
 	return (char*)mem + SF_HEADER_SIZE;
 
 
@@ -108,22 +100,15 @@ void *ExpandAndCoalescePrevious()
 
 	//traverseHeaders is the new block which will be 4096 when expanding the heap.
 	traverseHeaders->header.block_size = (4096 >> 4);
-	printf("%s%d\n", "allocating traverseheader mem in sbrk..: ", traverseHeaders->header.block_size<<4);
 
 	//Check to see if there is free space previously adjacent to the new space created.
 	sf_footer* checkFree = (sf_footer*)((char*)traverseHeaders - SF_HEADER_SIZE);
-
-	printf("%s%p\n", "Check to see if footer is free: ", checkFree);
 
 	//Free so we must coalesce
 	if((checkFree->alloc == 0 && (checkFree->block_size<<4) >=32))
 	{			
 		//Set new header by getting the old header on the left
 		sf_free_header *alloc_free_h = (sf_free_header*)((char*)checkFree - (checkFree->block_size <<4) + SF_HEADER_SIZE);  	//moves this to the header on the left
-		
-		printf("%s%p\n", "alloc_free_h: ", alloc_free_h);
-		printf("%s%d\n", "alloc_free_h size: ", alloc_free_h->header.block_size <<4);
-
 		alloc_free_h->header.alloc = 0;
 		alloc_free_h->header.block_size = traverseHeaders->header.block_size + checkFree->block_size;
 
@@ -161,12 +146,6 @@ void *ExpandAndCoalescePrevious()
 
 		freelist_head->prev = alloc_free_h;
 		freelist_head = alloc_free_h;		
-
-		// Snapshot the freelist
-    	//printf(" &&&&&&&&&&&&&&&&&&&&&&&&&&&&  ExpandAndCoalescePrevious Snapshot &&&&&&&&&\n");
-    	//sf_snapshot(true);
-
-		printf("%s%p\n", "New coalesced footer: ", checkFree);
 		coalesces++;
 		return freelist_head;
 	}
@@ -236,12 +215,10 @@ if(freelist_head == NULL){
 	initFree();
 
 	temp = freelist_head;
-	printf("%s%d\n", "temp block size: ", temp->header.block_size<<4);
 	freelist_head = (sf_free_header*)((char*)freelist_head + total);
 
 	freelist_head->header.alloc = temp->header.alloc;
 	freelist_head->header.block_size = temp->header.block_size - (total>>4);
-	printf("%s%d\n", "freelist: ", freelist_head->header.block_size<<4);
 
 	if(total == 4096){
 		freelist_head = NULL;
@@ -253,7 +230,6 @@ if(freelist_head == NULL){
 else
 {
 	sf_free_header *traverseHeaders = freelist_head;
-	printf("%s\n", "--Freelist_head is not null.--");
 
 ////////Found space somwhere in the freelist to allocate memory //////////////////////////////////////
 while(traverseHeaders!= NULL){	
@@ -269,7 +245,6 @@ while(traverseHeaders!= NULL){
 			//What if that block immeditely after it is allocated?
 			if(check_next_head->header.alloc == 1 && check_next_head->header.block_size <<4 >= 32)
 			{
-				printf("%s\n", "WHOOPS. NEXT BLOCK IS ALLOCATED!");
 				//Move the freelist_head pointer
 				//If pointer given was originally a freelist_head, just use the next one
 				if(freelist_head == traverseHeaders) 
@@ -307,7 +282,7 @@ while(traverseHeaders!= NULL){
 			sf_free_header* oldHead = traverseHeaders;
 			traverseHeaders = (sf_free_header*)((char*)traverseHeaders + total);
 			traverseHeaders->header.alloc = 0;
-			traverseHeaders->header.block_size = (total>>4);
+			traverseHeaders->header.block_size = oldHead->header.block_size - (total>>4);
 
 			if(oldHead->prev != NULL)oldHead->prev->next = oldHead->next;   //set previous block to current's next block
 			if(oldHead->next != NULL)oldHead->next->prev = oldHead->prev;   //set next block to the current's previous block
@@ -318,6 +293,7 @@ while(traverseHeaders!= NULL){
 			freelist_head->prev = traverseHeaders;
 			freelist_head = traverseHeaders;
 
+			 sf_snapshot(true);
 			return sf_fillAlloc(payload, padding, total, oldHead);
 		}
 	}
@@ -396,7 +372,6 @@ void sf_free(void *ptr){
 
 			//Increase coalesce counter
 			coalesces++;
-			printf("%s%lu\n", "# of coalesces: ", coalesces);
 		}
 
 		alloc_f = (sf_footer*)((char*)ptr - SF_HEADER_SIZE);
@@ -423,10 +398,8 @@ void sf_free(void *ptr){
 
 				alloc_h->next = NULL;
 				alloc_h = alloc_free_h;
-
-
 				coalesces++;
-				printf("%s%lu\n", "# of coalesces: ", coalesces);
+
 			}
 			else
 			{
@@ -452,20 +425,8 @@ void sf_free(void *ptr){
 
 				//Increase coalesce counter
 				coalesces++;
-				printf("%s%lu\n", "# of coalesces: ", coalesces);
 
 			}
-
-
-
-			// if(alloc_free_h->prev != NULL)
-			// {
-		 // 		alloc_free_h->prev->next = alloc_free_h->next;
-		 // 	}
-		 // 	if(alloc_free_h->next != NULL)
-		 // 	{
-		 // 		alloc_free_h->next->prev = alloc_free_h->prev;
-		 // 	}
 
 		}
 
@@ -498,6 +459,7 @@ void sf_free(void *ptr){
 		//Add the free bytes to the external variable.
 		external+= alloc_free_h->header.block_size << 4;
 		frees++;
+		 sf_snapshot(true);
 		return;
 
 	}
@@ -559,10 +521,18 @@ else
 
 //Free up the whole block. The free space gets put at the head of the list. 
 //So it will then immediately find that and place it right back where it's supposed to go.
-if(checkHead->block_size > total)
+if(checkHead->block_size < total)
 {
-	sf_free(ptrH);
-	return sf_malloc(size);
+	char* reallocate;
+	char saveData[size];
+	memset(saveData, 0, size);
+	sf_header* reallocHeader = (sf_header*)(ptrH);
+  	memcpy(saveData, ptr, (reallocHeader->block_size << 4) - 16);
+  	
+  	sf_free(ptr);
+	reallocate = sf_malloc(size);
+	*reallocate = *saveData;
+	return reallocate;
 }
 
 printf("%d\n",total);
