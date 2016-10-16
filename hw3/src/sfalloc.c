@@ -144,9 +144,14 @@ int main(int argc, char *argv[]) {
     sf_snapshot(true);
     sf_varprint(memory);
     printf("=== Free list ===\n");
-    sf_free(memory);
+    //sf_free(memory);
     sf_snapshot(true);
     press_to_cont();
+
+    sf_realloc(memory,100);
+    printf("^^^^^^LISISSSTTTTTTTTTTTTTTTTTt\n");
+    sf_varprint(memory);
+    sf_snapshot(true);
 
     sf_mem_fini();
 
