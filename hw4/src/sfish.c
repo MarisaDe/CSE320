@@ -1,4 +1,5 @@
 #include "sfish.h"
+#include <unistd.h>
 
 int main(int argc, char** argv) {
     //DO NOT MODIFY THIS. If you do you will get a ZERO.
@@ -7,12 +8,30 @@ int main(int argc, char** argv) {
     //to install your own.
 
     char *cmd;
-
     while((cmd = readline("sfish> ")) != NULL) {
-        if (strcmp(cmd,"quit")==0)
-            break;
+
+         //Exit or quit the program
+        if (strcmp(cmd,"quit")==0 || strcmp(cmd,"exit")==0)
+            exit(3);
 
         printf("%s\n",cmd);
+
+        //cd no args
+        if (strcmp(cmd,"cd")==0)
+        {
+            char buffer[1024];
+            printf("%s\n", getcwd(buffer, sizeof buffer));
+
+        }
+
+        //pwd
+        if (strcmp(cmd,"pwd")==0)
+        {
+            char buffer[1024];
+            printf("%s\n", getcwd(buffer, sizeof buffer));
+
+        }
+
 
         //All your debug print statments should be surrounded by this #ifdef
         //block. Use the debug target in the makefile to run with these enabled.
