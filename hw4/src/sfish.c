@@ -92,12 +92,10 @@ int main(int argc, char** argv) {
         //pwd prints working directory
         if (strcmp(cmd,"pwd")==0) printf("%s\n", getcwd(buffer, sizeof buffer));
 
+        //chmpt options
         if (strcmp(cmd,"chmpt user 1")==0) userFlag = 1;
-
         if (strcmp(cmd,"chmpt user 0")==0) userFlag = 0;
-
         if (strcmp(cmd,"chmpt machine 1")==0) machineFlag = 1;
-
         if (strcmp(cmd,"chmpt machine 0")==0) machineFlag = 0;
 
 
