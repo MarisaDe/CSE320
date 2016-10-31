@@ -1,36 +1,90 @@
 #include "sfish.h"
 #include <unistd.h>
+#include <stdio.h>
 
 
+// \e[35;1m   ddlfkjgldkfjgldkj  \033[0m
+char Ucolor[128];
+char Mcolor[128];
+
+ #define RED     "\033[22;31"
+ #define GREEN   "\033[22;32"
+ #define YELLOW  "\033[22;33"
+ #define BLUE    "\033[22;34"
+ #define MAGENTA "\033[22;35"
+ #define CYAN    "\033[22;36"
+ #define WHITE   "\033[22;37"
+
+
+void setColor(char* color, int colorFlag, int bold)
+{
+    char* user = getenv("USER");
+    char machine[128];
+    gethostname(machine, sizeof machine);
+
+
+    //colorFlag. 1 = change user color, 2 = change machine color.
+    if(colorFlag == 1)
+    {
+        if (strcmp(color,"red")==0) strcpy(Ucolor, RED);
+        if (strcmp(color,"green")==0) strcpy(Ucolor, GREEN);
+        if (strcmp(color,"yellow")==0) strcpy(Ucolor, YELLOW);
+        if (strcmp(color,"blue")==0) strcpy(Ucolor, BLUE);
+        if (strcmp(color,"magenta")==0) strcpy(Ucolor, MAGENTA);
+        if (strcmp(color,"cyan")==0) strcpy(Ucolor, CYAN);  
+        if (strcmp(color,"white")==0) strcpy(Ucolor, WHITE); 
+
+        if(bold == 1) strcat(Ucolor, ";1m");
+        else strcat(Ucolor, "m");
+        strcat(Ucolor, user); 
+        strcat(Ucolor, "\033[0m");
+    }
+    else if (colorFlag == 2)
+    {
+        if (strcmp(color,"red")==0) strcpy(Mcolor, RED);
+        if (strcmp(color,"green")==0) strcpy(Mcolor, GREEN);
+        if (strcmp(color,"yellow")==0) strcpy(Mcolor, YELLOW);
+        if (strcmp(color,"blue")==0) strcpy(Mcolor, BLUE);
+        if (strcmp(color,"magenta")==0) strcpy(Mcolor, MAGENTA);
+        if (strcmp(color,"cyan")==0) strcpy(Mcolor, CYAN);  
+        if (strcmp(color,"white")==0) strcpy(Mcolor, WHITE);   
+
+        if(bold == 1) strcat(Mcolor, ";1m");
+        else strcat(Mcolor, "m");
+        strcat(Mcolor, machine);
+        strcat(Mcolor, "\033[0m");   
+    }
+}
 
 const char* sfish(int userFlag, int machineFlag, char* buffer)
 {
-    char buffy[128];
+    //char buffy[128];
     char cwd[128];
-    gethostname(buffy, sizeof buffy);
+    //gethostname(buffy, sizeof buffy);
     getcwd(cwd, sizeof(cwd));
-    if(strcmp(cwd,getenv("HOME")) == 0)  strcpy(cwd,"~");
+    //char user = getenv("USER");
 
+    if(strcmp(cwd,getenv("HOME")) == 0)  strcpy(cwd,"~");
     if(userFlag == 1 && machineFlag == 1){
 
-        snprintf(buffer, 1024, "%s%s%s%s%s%s%s%s", "sfish-", getenv("USER"), "@", buffy, ":", "[", cwd, "]> ");
+        snprintf(buffer, 1024, "%s%s%s%s%s%s%s%s", "sfish-", Ucolor, "@", Mcolor, ":", "[", cwd, "]> ");
         return buffer;
     }
     else if (userFlag == 1){
 
-        snprintf(buffer, 1024, "%s%s%s%s%s%s", "sfish-", getenv("USER"), ":", "[", cwd, "]> ");
+        snprintf(buffer, 1024, "%s%s%s%s%s%s", "sfish-", Ucolor, ":", "[", cwd, "]> ");
         return buffer;
     }
 
     else if(machineFlag == 1){
 
-        snprintf(buffer, 1024, "%s%s%s%s%s%s", "sfish-", buffy, ":", "[", cwd, "]> ");
+        snprintf(buffer, 1024, "%s%s%s%s%s%s", "sfish-", Mcolor, ":", "[", cwd, "]> ");
         return buffer;
     }
 
     else{
 
-        snprintf(buffer, 1024, "%s%s%s%s", "sfish:", "[", cwd, "]> ");;
+        snprintf(buffer, 1024, "%s%s%s%s", "sfish:", "[", cwd, "]> ");
         return buffer;
     }
   
@@ -53,6 +107,9 @@ int main(int argc, char** argv) {
     //char *sfishline = sfish(1,1);
     int userFlag = 1;
     int machineFlag = 1;
+    //set initial colors to white
+    setColor("white", 1, 1);
+    setColor("white", 2, 0);
 
     while((cmd = readline((sfish(userFlag, machineFlag, buffer)))) != NULL) {
          //Exit or quit the program
@@ -85,7 +142,7 @@ int main(int argc, char** argv) {
             newDirectory = strtok(cmd, space);
             newDirectory = strtok(NULL, space);
             prevDirectory = getcwd(buffer, sizeof buffer);
-            printf("%s\n", newDirectory);
+            //printf("%s\n", newDirectory);
             chdir(newDirectory);
         }
 
@@ -93,10 +150,12 @@ int main(int argc, char** argv) {
         if (strcmp(cmd,"pwd")==0) printf("%s\n", getcwd(buffer, sizeof buffer));
 
         //chmpt options
-        if (strcmp(cmd,"chmpt user 1")==0) userFlag = 1;
-        if (strcmp(cmd,"chmpt user 0")==0) userFlag = 0;
-        if (strcmp(cmd,"chmpt machine 1")==0) machineFlag = 1;
-        if (strcmp(cmd,"chmpt machine 0")==0) machineFlag = 0;
+        //red
+        if (strcmp(cmd,"chmpt red user 1")==0) setColor("red", 1, 1);
+        if (strcmp(cmd,"chmpt red user 0")==0) setColor("red", 1, 0);
+        if (strcmp(cmd,"chmpt red machine 1")==0) setColor("red", 2, 1);
+        if (strcmp(cmd,"chmpt red machine 0")==0) setColor("red", 2, 0);
+
 
 
 
