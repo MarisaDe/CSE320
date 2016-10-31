@@ -167,10 +167,10 @@ int main(int argc, char** argv) {
 
         //chmpt options
         //red
-        if (strcmp(cmd,"chmpt red user 1")==0) setColor("red", 1, 1);
-        if (strcmp(cmd,"chmpt red user 0")==0) setColor("red", 1, 0);
-        if (strcmp(cmd,"chmpt red machine 1")==0) setColor("red", 2, 1);
-        if (strcmp(cmd,"chmpt red machine 0")==0) setColor("red", 2, 0);
+        if (strcmp(cmd,"chclr red user 1")==0) setColor("red", 1, 1);
+        if (strcmp(cmd,"chclr red user 0")==0) setColor("red", 1, 0);
+        if (strcmp(cmd,"chclr red machine 1")==0) setColor("red", 2, 1);
+        if (strcmp(cmd,"chclr red machine 0")==0) setColor("red", 2, 0);
 
 
 
