@@ -2,8 +2,6 @@
 #include <unistd.h>
 #include <stdio.h>
 
-
-// \e[35;1m   ddlfkjgldkfjgldkj  \033[0m
 char Ucolor[128];
 char Mcolor[128];
 
@@ -14,6 +12,7 @@ char Mcolor[128];
  #define MAGENTA "\033[22;35"
  #define CYAN    "\033[22;36"
  #define WHITE   "\033[22;37"
+ #define BLACK   "\033[22;40"
 
 
 void setColor(char* color, int colorFlag, int bold)
@@ -33,6 +32,7 @@ void setColor(char* color, int colorFlag, int bold)
         if (strcmp(color,"magenta")==0) strcpy(Ucolor, MAGENTA);
         if (strcmp(color,"cyan")==0) strcpy(Ucolor, CYAN);  
         if (strcmp(color,"white")==0) strcpy(Ucolor, WHITE); 
+        if (strcmp(color,"black")==0) strcpy(Ucolor, BLACK); 
 
         if(bold == 1) strcat(Ucolor, ";1m");
         else strcat(Ucolor, "m");
@@ -47,7 +47,8 @@ void setColor(char* color, int colorFlag, int bold)
         if (strcmp(color,"blue")==0) strcpy(Mcolor, BLUE);
         if (strcmp(color,"magenta")==0) strcpy(Mcolor, MAGENTA);
         if (strcmp(color,"cyan")==0) strcpy(Mcolor, CYAN);  
-        if (strcmp(color,"white")==0) strcpy(Mcolor, WHITE);   
+        if (strcmp(color,"white")==0) strcpy(Mcolor, WHITE); 
+        if (strcmp(color,"black")==0) strcpy(Mcolor, BLACK);   
 
         if(bold == 1) strcat(Mcolor, ";1m");
         else strcat(Mcolor, "m");
@@ -55,6 +56,7 @@ void setColor(char* color, int colorFlag, int bold)
         strcat(Mcolor, "\033[0m");   
     }
 }
+
 
 const char* sfish(int userFlag, int machineFlag, char* buffer)
 {
@@ -90,6 +92,16 @@ const char* sfish(int userFlag, int machineFlag, char* buffer)
   
 }
 
+void printHelp()
+{
+    printf("%s\n", "cd [-L|[-P [-e]] [-@]] [dir]");
+    printf("%s\n", "chclr [SETTING] [COLOR] [BOLD]");
+    printf("%s\n", "chmpt [SETTING] [TOGGLE]");
+    printf("%s\n", "exit [n]");
+    printf("%s\n", "help [-dms] [pattern ...] ");
+    printf("%s\n", "pwd Prints the absolute path of the current working directory.");
+}
+
 
 int main(int argc, char** argv) {
     //DO NOT MODIFY THIS. If you do you will get a ZERO.
@@ -113,11 +125,15 @@ int main(int argc, char** argv) {
 
     while((cmd = readline((sfish(userFlag, machineFlag, buffer)))) != NULL) {
          //Exit or quit the program
-        if (strcmp(cmd,"quit")==0 || strcmp(cmd,"exit")==0)
+        if (strcmp(cmd,"exit")==0)
             exit(3);
 
         printf("%s\n",cmd);
 
+        if (strcmp(cmd,"help")==0)
+        {
+            printHelp();
+        }
         //cd with no args: should go to the user’s home directory which is stored in the HOME env. variable
         if (strcmp(cmd,"cd")==0)
         {
