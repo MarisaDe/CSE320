@@ -8,13 +8,13 @@ extern char Mcolor[128];
 extern int userFlag;
 extern int machineFlag;
 extern char* prevDirectory;
+extern int prtValue;
 
 /*  
 *	Sets the color and boldness of the prompt specified by colorFlag.
 *   @param color - the color you want to be changed to
 *   @param colorFlag - an int that should only be 1 or 2 which identifies what to change the color of.
 *   @param bold - an int that should only be 0 or 1 which bolds the colored text
-*   @return void (nothing)
 */
 void setColor(char* setting, char* color,  char* bold);
 
@@ -43,3 +43,9 @@ void chmpt(char* setting, char* toggle);
 * 	@param cmd -  current input
 */
 void parse(char* cmd);
+
+
+/*
+* 	Helper method that prints the error message.	
+*/
+void error();

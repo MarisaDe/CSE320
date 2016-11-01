@@ -9,6 +9,7 @@ char Mcolor[128];
 int userFlag = 1;
 int machineFlag = 1;
 char* prevDirectory;
+int prtValue;
 
  #define RED     "\033[22;31"
  #define GREEN   "\033[22;32"
@@ -19,6 +20,13 @@ char* prevDirectory;
  #define WHITE   "\033[22;37"
  #define BLACK   "\033[22;40"
 
+
+void error()
+{
+    errno = EINVAL;
+    printf("%s\n", "Invalid argument");
+    prtValue = 1;
+}
 
 void setColor(char* setting, char* color,  char* bold)
 {
@@ -38,8 +46,7 @@ void setColor(char* setting, char* color,  char* bold)
         else if (strcmp(color,"black")==0) strcpy(Ucolor, BLACK); 
         else
         {
-            errno = EINVAL;
-            printf("%s\n", "Invalid argument");
+            error();
             return;
         }
 
@@ -47,12 +54,13 @@ void setColor(char* setting, char* color,  char* bold)
         else if(strcmp(bold,"0")==0) strcat(Ucolor, "m");
         else
         {
-            errno = EINVAL;
-            printf("%s\n", "Invalid argument");
+            error();
             return;
         }
         strcat(Ucolor, user); 
         strcat(Ucolor, "\033[0m");
+        prtValue = 0;
+        return;
     }
     else if (strcmp(setting,"machine")==0)
     {
@@ -66,8 +74,7 @@ void setColor(char* setting, char* color,  char* bold)
         else if (strcmp(color,"black")==0) strcpy(Mcolor, BLACK);   
         else
         {
-            errno = EINVAL;
-            printf("%s\n", "Invalid argument");
+            error();
             return;
         } 
 
@@ -75,14 +82,17 @@ void setColor(char* setting, char* color,  char* bold)
         else if(strcmp(bold,"0")==0) strcat(Mcolor, "m");
         else
         {
-            errno = EINVAL;
-            printf("%s\n", "Invalid argument");
+            error();
             return;
         }
         strcat(Mcolor, machine);
-        strcat(Mcolor, "\033[0m");   
+        strcat(Mcolor, "\033[0m");
+        prtValue = 0;
+        return;   
     }
-        return;
+
+    error();
+    return;
 }
 
 
@@ -138,7 +148,7 @@ void chmpt(char* setting, char* toggle)
         if(strcmp(toggle,"0") == 0) userFlag = 0;
         if(strcmp(toggle,"1") == 0) userFlag = 1;
         else
-            errno = EINVAL;
+            error();
             return;
     }
     if(strcmp(setting,"machine") == 0)
@@ -146,14 +156,19 @@ void chmpt(char* setting, char* toggle)
         if(strcmp(toggle,"0") == 0) machineFlag = 0;
         if(strcmp(toggle,"1") == 0) machineFlag = 1;
         else
-            errno = EINVAL;
+            error();
             return;
     }
     else
-        errno = EINVAL;
-        printf("%s\n", "Invalid argument");
+        error();
         return;
 
+}
+
+void prt()
+{   
+    printf("%d\n", prtValue);
+    prtValue = 0;
 }
 
 void parse(char* cmd)
@@ -168,15 +183,17 @@ void parse(char* cmd)
     if (first == NULL) return;
 
     //Check all cases with 1 arg only
-    if(strcmp(first,"exit")==0) exit(3);
-    if(strcmp(first,"pwd")==0) printf("%s\n", getcwd(buffer, sizeof buffer));
-    if(strcmp(first,"help")==0) printHelp();
+    else if(strcmp(first,"exit")==0) exit(3);
+    else if(strcmp(first,"pwd")==0) printf("%s\n", getcwd(buffer, sizeof buffer));
+    else if(strcmp(first,"help")==0) printHelp();
+    else if(strcmp(first,"prt")==0) prt();
+
 
     //Check all cases with multiple args
    
 
     //Checks for the 3 cd cases
-    if(strcmp(first,"cd") == 0)
+    else if(strcmp(first,"cd") == 0)
     {
         second = strtok(NULL, " ");
         if(second == NULL)
@@ -211,6 +228,7 @@ void parse(char* cmd)
             {
                 errno = ENOENT;
                 printf("%s\n", "No such file or directory");
+                prtValue = 1;
                 return;
             }
         }
@@ -228,15 +246,13 @@ void parse(char* cmd)
         second = strtok(NULL, " ");
         if(second == NULL) 
         {
-            errno = EINVAL;
-            printf("%s\n", "Invalid argument");
+            error();
             return;
         }
         third = strtok(NULL, " ");
         if(third == NULL)
         {
-            errno = EINVAL;
-            printf("%s\n", "Invalid argument");
+            error();
             return;
         }
         chmpt(second, third);
@@ -248,23 +264,20 @@ void parse(char* cmd)
         second = strtok(NULL, " "); 
         if(second == NULL)
         {
-            errno = EINVAL;
-            printf("%s\n", "Invalid argument");
+            error();
             return;
         } 
         third = strtok(NULL, " "); 
         if(third == NULL)
         {
-            errno = EINVAL;
-            printf("%s\n", "Invalid argument");
+            error();
             return;
         }
         fourth = strtok(NULL, " ");
 
         if(fourth == NULL)
         {
-            errno = EINVAL;
-            printf("%s\n", "Invalid argument");
+            error();
             return;
         }
 
@@ -274,6 +287,7 @@ void parse(char* cmd)
     else if(first != NULL)
     {
        printf("%s\n", "Command not found");
+       prtValue = 127;
        errno = EINVAL;
        return; 
     }
