@@ -132,12 +132,41 @@ const char* sfish(char* buffer)
 
 void printHelp()
 {
-    printf("%s\n", "cd [-L|[-P [-e]] [-@]] [dir]");
-    printf("%s\n", "chclr [SETTING] [COLOR] [BOLD]");
-    printf("%s\n", "chmpt [SETTING] [TOGGLE]");
-    printf("%s\n", "exit [n]");
-    printf("%s\n", "help [-dms] [pattern ...] ");
-    printf("%s\n", "pwd Prints the absolute path of the current working directory.");
+    printf("%s\n", "help");
+    printf("\t%s\n\n", "Print a list of all builtin’s and their basic usage in a single column.");
+    printf("%s\n", "exit");
+    printf("\t%s\n\n", "Exits the shell.");
+    printf("%s\n", "cd");
+    printf("\t%s\n", "Changes the current working directory of the shell by using the chdir(2) system call");
+    printf("\t%s\n", "cd - changes the working directory to the last directory the user was in.");
+    printf("\t%s\n\n", "cd with no arguments goes to the user’s home directory.");
+    printf("%s\n", "pwd");
+    printf("\t%s\n\n", "Prints the current working directory.");
+    printf("%s\n", "chpmt:  Change prompt settings");
+    printf("\t%s\n\n", "Usage: chpmt SETTING TOGGLE");
+    printf("\t%s\n", "Valid values for SETTING are:");
+    printf("\t\t%s\n", "user: The user field in the prompt.");
+    printf("\t\t%s\n\n", "machine: The context field in the prompt.");
+    printf("\t%s\n", "Valid values for TOGGLE are:");
+    printf("\t\t%s\n", "1: Enabled");
+    printf("\t\t%s\n\n", "0: Disabled");
+    printf("%s\n", "chclr:  Change prompt colors");
+    printf("\t%s\n\n", "Usage: chclr SETTING COLOR BOLD");
+    printf("\t%s\n", "Valid values for SETTING are:");
+    printf("\t\t%s\n", "user: The user field in the prompt.");
+    printf("\t\t%s\n\n", "machine: The context field in the prompt.");
+    printf("\t%s\n", "Valid values for COLOR are:");
+    printf("\t\t%s\n", "red: ANSI red.");
+    printf("\t\t%s\n", "blue: ANSI blue.");
+    printf("\t\t%s\n", "green: ANSI green.");
+    printf("\t\t%s\n", "yellow: ANSI yellow.");
+    printf("\t\t%s\n", "cyan: ANSI cyan.");
+    printf("\t\t%s\n", "magenta: ANSI magenta.");
+    printf("\t\t%s\n", "black: ANSI black.");
+    printf("\t\t%s\n\n", "white: ANSI white.");
+    printf("\t%s\n", "To toggle BOLD use:");
+    printf("\t\t%s\n", "1: Enabled");
+    printf("\t\t%s\n\n", "0: Disabled");
 }
 
 
@@ -146,22 +175,26 @@ void chmpt(char* setting, char* toggle)
     if(strcmp(setting,"user") == 0)
     {
         if(strcmp(toggle,"0") == 0) userFlag = 0;
-        if(strcmp(toggle,"1") == 0) userFlag = 1;
+        else if(strcmp(toggle,"1") == 0) userFlag = 1;
         else
             error();
             return;
     }
-    if(strcmp(setting,"machine") == 0)
+    else if(strcmp(setting,"machine") == 0)
     {
         if(strcmp(toggle,"0") == 0) machineFlag = 0;
-        if(strcmp(toggle,"1") == 0) machineFlag = 1;
+        else if(strcmp(toggle,"1") == 0) machineFlag = 1;
         else
             error();
             return;
     }
     else
+    {
         error();
         return;
+    }
+    prtValue = 0;  //SUCCESS!
+    return;
 
 }
 
@@ -173,6 +206,8 @@ void prt()
 
 void parse(char* cmd)
 {
+    printf("%s%s\n", "previous directory:", prevDirectory);
+
     char buffer[1028];
     char *first;
     char *second;
@@ -201,14 +236,18 @@ void parse(char* cmd)
             prevDirectory = getcwd(buffer, sizeof buffer);
             chdir(getenv("HOME"));
             printf("%s\n", getenv("HOME"));
+            prtValue = 0; //SUCCESS
             return;
         }
 
         else if(strcmp(second, "-") == 0)
         {
+            char* holdDirectory;
             printf("%s\n", prevDirectory);
-            //holdDirectory = getcwd(buffer3, sizeof buffer3);
+            holdDirectory = getcwd(buffer, sizeof buffer);
             chdir(prevDirectory);
+            strcpy(prevDirectory, holdDirectory);
+            prtValue = 0; //SUCCESS
             return;
         }
         else if (second != NULL) //User typed cd and at least a second arg.
@@ -217,11 +256,12 @@ void parse(char* cmd)
 
             if (dir) //The directory is there so we can switch to it.
             {
-                char buffer2[1028];
+
                 closedir(dir);
-                prevDirectory = getcwd(buffer2, sizeof buffer2);
+                prevDirectory = getcwd(buffer, sizeof buffer);
                 chdir(second);
                 printf("%s\n", prevDirectory);
+                prtValue = 0; //SUCCESS
                 return;
             }
             else     //The directory doesn't exist.
@@ -236,7 +276,8 @@ void parse(char* cmd)
         {
             prevDirectory = getcwd(buffer, sizeof buffer);
             chdir(getenv("HOME"));
-            printf("%s\n", getenv("HOME"));
+            printf("%s\n", prevDirectory);
+            prtValue = 0; //SUCCESS
             return;
         }
     }
