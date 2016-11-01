@@ -1,9 +1,14 @@
 #include "sfish.h"
 #include <unistd.h>
 #include <stdio.h>
+#include <dirent.h>
+#include <errno.h>
 
 char Ucolor[128];
 char Mcolor[128];
+int userFlag = 1;
+int machineFlag = 1;
+char* prevDirectory;
 
  #define RED     "\033[22;31"
  #define GREEN   "\033[22;32"
@@ -15,50 +20,73 @@ char Mcolor[128];
  #define BLACK   "\033[22;40"
 
 
-void setColor(char* color, int colorFlag, int bold)
+void setColor(char* setting, char* color,  char* bold)
 {
     char* user = getenv("USER");
     char machine[128];
     gethostname(machine, sizeof machine);
 
-
-    //colorFlag. 1 = change user color, 2 = change machine color.
-    if(colorFlag == 1)
+    if(strcmp(setting,"user")==0)
     {
         if (strcmp(color,"red")==0) strcpy(Ucolor, RED);
-        if (strcmp(color,"green")==0) strcpy(Ucolor, GREEN);
-        if (strcmp(color,"yellow")==0) strcpy(Ucolor, YELLOW);
-        if (strcmp(color,"blue")==0) strcpy(Ucolor, BLUE);
-        if (strcmp(color,"magenta")==0) strcpy(Ucolor, MAGENTA);
-        if (strcmp(color,"cyan")==0) strcpy(Ucolor, CYAN);  
-        if (strcmp(color,"white")==0) strcpy(Ucolor, WHITE); 
-        if (strcmp(color,"black")==0) strcpy(Ucolor, BLACK); 
+        else if (strcmp(color,"green")==0) strcpy(Ucolor, GREEN);
+        else if (strcmp(color,"yellow")==0) strcpy(Ucolor, YELLOW);
+        else if (strcmp(color,"blue")==0) strcpy(Ucolor, BLUE);
+        else if (strcmp(color,"magenta")==0) strcpy(Ucolor, MAGENTA);
+        else if (strcmp(color,"cyan")==0) strcpy(Ucolor, CYAN);  
+        else if (strcmp(color,"white")==0) strcpy(Ucolor, WHITE); 
+        else if (strcmp(color,"black")==0) strcpy(Ucolor, BLACK); 
+        else
+        {
+            errno = EINVAL;
+            printf("%s\n", "Invalid argument");
+            return;
+        }
 
-        if(bold == 1) strcat(Ucolor, ";1m");
-        else strcat(Ucolor, "m");
+        if(strcmp(bold,"1")==0) strcat(Ucolor, ";1m");
+        else if(strcmp(bold,"0")==0) strcat(Ucolor, "m");
+        else
+        {
+            errno = EINVAL;
+            printf("%s\n", "Invalid argument");
+            return;
+        }
         strcat(Ucolor, user); 
         strcat(Ucolor, "\033[0m");
     }
-    else if (colorFlag == 2)
+    else if (strcmp(setting,"machine")==0)
     {
         if (strcmp(color,"red")==0) strcpy(Mcolor, RED);
-        if (strcmp(color,"green")==0) strcpy(Mcolor, GREEN);
-        if (strcmp(color,"yellow")==0) strcpy(Mcolor, YELLOW);
-        if (strcmp(color,"blue")==0) strcpy(Mcolor, BLUE);
-        if (strcmp(color,"magenta")==0) strcpy(Mcolor, MAGENTA);
-        if (strcmp(color,"cyan")==0) strcpy(Mcolor, CYAN);  
-        if (strcmp(color,"white")==0) strcpy(Mcolor, WHITE); 
-        if (strcmp(color,"black")==0) strcpy(Mcolor, BLACK);   
+        else if (strcmp(color,"green")==0) strcpy(Mcolor, GREEN);
+        else if (strcmp(color,"yellow")==0) strcpy(Mcolor, YELLOW);
+        else if (strcmp(color,"blue")==0) strcpy(Mcolor, BLUE);
+        else if (strcmp(color,"magenta")==0) strcpy(Mcolor, MAGENTA);
+        else if (strcmp(color,"cyan")==0) strcpy(Mcolor, CYAN);  
+        else if (strcmp(color,"white")==0) strcpy(Mcolor, WHITE); 
+        else if (strcmp(color,"black")==0) strcpy(Mcolor, BLACK);   
+        else
+        {
+            errno = EINVAL;
+            printf("%s\n", "Invalid argument");
+            return;
+        } 
 
-        if(bold == 1) strcat(Mcolor, ";1m");
-        else strcat(Mcolor, "m");
+        if(strcmp(bold,"1")==0) strcat(Mcolor, ";1m");
+        else if(strcmp(bold,"0")==0) strcat(Mcolor, "m");
+        else
+        {
+            errno = EINVAL;
+            printf("%s\n", "Invalid argument");
+            return;
+        }
         strcat(Mcolor, machine);
         strcat(Mcolor, "\033[0m");   
     }
+        return;
 }
 
 
-const char* sfish(int userFlag, int machineFlag, char* buffer)
+const char* sfish(char* buffer)
 {
     //char buffy[128];
     char cwd[128];
@@ -66,7 +94,7 @@ const char* sfish(int userFlag, int machineFlag, char* buffer)
     getcwd(cwd, sizeof(cwd));
     //char user = getenv("USER");
 
-    if(strcmp(cwd,getenv("HOME")) == 0)  strcpy(cwd,"~");
+    if(strcmp(cwd,getenv("HOME")) == 0) strcpy(cwd,"~");
     if(userFlag == 1 && machineFlag == 1){
 
         snprintf(buffer, 1024, "%s%s%s%s%s%s%s%s", "sfish-", Ucolor, "@", Mcolor, ":", "[", cwd, "]> ");
@@ -103,6 +131,156 @@ void printHelp()
 }
 
 
+void chmpt(char* setting, char* toggle)
+{
+    if(strcmp(setting,"user") == 0)
+    {
+        if(strcmp(toggle,"0") == 0) userFlag = 0;
+        if(strcmp(toggle,"1") == 0) userFlag = 1;
+        else
+            errno = EINVAL;
+            return;
+    }
+    if(strcmp(setting,"machine") == 0)
+    {
+        if(strcmp(toggle,"0") == 0) machineFlag = 0;
+        if(strcmp(toggle,"1") == 0) machineFlag = 1;
+        else
+            errno = EINVAL;
+            return;
+    }
+    else
+        errno = EINVAL;
+        printf("%s\n", "Invalid argument");
+        return;
+
+}
+
+void parse(char* cmd)
+{
+    char buffer[1028];
+    char *first;
+    char *second;
+    char *third;
+    char *fourth;
+
+    first = strtok(cmd, " ");
+    if (first == NULL) return;
+
+    //Check all cases with 1 arg only
+    if(strcmp(first,"exit")==0) exit(3);
+    if(strcmp(first,"pwd")==0) printf("%s\n", getcwd(buffer, sizeof buffer));
+    if(strcmp(first,"help")==0) printHelp();
+
+    //Check all cases with multiple args
+   
+
+    //Checks for the 3 cd cases
+    if(strcmp(first,"cd") == 0)
+    {
+        second = strtok(NULL, " ");
+        if(second == NULL)
+        {
+            prevDirectory = getcwd(buffer, sizeof buffer);
+            chdir(getenv("HOME"));
+            printf("%s\n", getenv("HOME"));
+            return;
+        }
+
+        else if(strcmp(second, "-") == 0)
+        {
+            printf("%s\n", prevDirectory);
+            //holdDirectory = getcwd(buffer3, sizeof buffer3);
+            chdir(prevDirectory);
+            return;
+        }
+        else if (second != NULL) //User typed cd and at least a second arg.
+        {
+            DIR* dir = opendir(second);
+
+            if (dir) //The directory is there so we can switch to it.
+            {
+                char buffer2[1028];
+                closedir(dir);
+                prevDirectory = getcwd(buffer2, sizeof buffer2);
+                chdir(second);
+                printf("%s\n", prevDirectory);
+                return;
+            }
+            else     //The directory doesn't exist.
+            {
+                errno = ENOENT;
+                printf("%s\n", "No such file or directory");
+                return;
+            }
+        }
+        else //The only input was cd.
+        {
+            prevDirectory = getcwd(buffer, sizeof buffer);
+            chdir(getenv("HOME"));
+            printf("%s\n", getenv("HOME"));
+            return;
+        }
+    }
+    //Checks chpmt cases
+    else if(strcmp(first,"chpmt") == 0)
+    {
+        second = strtok(NULL, " ");
+        if(second == NULL) 
+        {
+            errno = EINVAL;
+            printf("%s\n", "Invalid argument");
+            return;
+        }
+        third = strtok(NULL, " ");
+        if(third == NULL)
+        {
+            errno = EINVAL;
+            printf("%s\n", "Invalid argument");
+            return;
+        }
+        chmpt(second, third);
+        return;
+    }
+
+    else if(strcmp(first,"chclr") == 0)
+    {
+        second = strtok(NULL, " "); 
+        if(second == NULL)
+        {
+            errno = EINVAL;
+            printf("%s\n", "Invalid argument");
+            return;
+        } 
+        third = strtok(NULL, " "); 
+        if(third == NULL)
+        {
+            errno = EINVAL;
+            printf("%s\n", "Invalid argument");
+            return;
+        }
+        fourth = strtok(NULL, " ");
+
+        if(fourth == NULL)
+        {
+            errno = EINVAL;
+            printf("%s\n", "Invalid argument");
+            return;
+        }
+
+        setColor(second, third, fourth);
+        return;
+    }
+    else if(first != NULL)
+    {
+       printf("%s\n", "Command not found");
+       errno = EINVAL;
+       return; 
+    }
+
+    
+}
+
 int main(int argc, char** argv) {
     //DO NOT MODIFY THIS. If you do you will get a ZERO.
     rl_catch_signals = 0;
@@ -113,67 +291,16 @@ int main(int argc, char** argv) {
     //Initially set up the home variable
     chdir(getenv("HOME"));
     char *cmd;
-    char *prevDirectory;
+    //char *holdDirectory;
     prevDirectory = getenv("HOME");
     char buffer[1024];
-    //char *sfishline = sfish(1,1);
-    int userFlag = 1;
-    int machineFlag = 1;
     //set initial colors to white
-    setColor("white", 1, 1);
-    setColor("white", 2, 0);
+    setColor("user", "white", "0");
+    setColor("machine", "white", "0");
 
-    while((cmd = readline((sfish(userFlag, machineFlag, buffer)))) != NULL) {
-         //Exit or quit the program
-        if (strcmp(cmd,"exit")==0)
-            exit(3);
+    while((cmd = readline((sfish(buffer)))) != NULL) {
 
-        printf("%s\n",cmd);
-
-        if (strcmp(cmd,"help")==0)
-        {
-            printHelp();
-        }
-        //cd with no args: should go to the user’s home directory which is stored in the HOME env. variable
-        if (strcmp(cmd,"cd")==0)
-        {
-            
-            prevDirectory = getcwd(buffer, sizeof buffer);
-            chdir(getenv("HOME"));
-            printf("%s\n", getenv("HOME"));
-
-        }
-
-        //should change the working directory to the last directory the user was in.
-        //Will work on this later, might need a stack of every directory change made.
-        if(strcmp(cmd,"cd -")==0)
-        {
-            chdir(prevDirectory);
-        }
-        //if cmd contains cd and it's not just equal to cd, change working directory to what user specifies
-        if(strstr(cmd, "cd ") != NULL && strcmp(cmd,"cd")!=0) 
-        {
-            char *space = " ";
-            char *newDirectory;
-            newDirectory = strtok(cmd, space);
-            newDirectory = strtok(NULL, space);
-            prevDirectory = getcwd(buffer, sizeof buffer);
-            //printf("%s\n", newDirectory);
-            chdir(newDirectory);
-        }
-
-        //pwd prints working directory
-        if (strcmp(cmd,"pwd")==0) printf("%s\n", getcwd(buffer, sizeof buffer));
-
-        //chmpt options
-        //red
-        if (strcmp(cmd,"chclr red user 1")==0) setColor("red", 1, 1);
-        if (strcmp(cmd,"chclr red user 0")==0) setColor("red", 1, 0);
-        if (strcmp(cmd,"chclr red machine 1")==0) setColor("red", 2, 1);
-        if (strcmp(cmd,"chclr red machine 0")==0) setColor("red", 2, 0);
-
-
-
+        parse(cmd);
 
         //All your debug print statments should be surrounded by this #ifdef
         //block. Use the debug target in the makefile to run with these enabled.
