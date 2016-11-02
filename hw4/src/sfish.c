@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <errno.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 
 char Ucolor[128];
 char Mcolor[128];
@@ -220,9 +222,41 @@ void parse(char* cmd)
 
     //Check all cases with 1 arg only
     else if(strcmp(first,"exit")==0) exit(3);
-    else if(strcmp(first,"pwd")==0) printf("%s\n", getcwd(buffer, sizeof buffer));
-    else if(strcmp(first,"help")==0) printHelp();
-    else if(strcmp(first,"prt")==0) prt();
+    else if(strcmp(first,"pwd")==0) 
+    {  
+        pid_t pid = fork();
+        if (pid == 0)  printf("%s\n", getcwd(buffer, sizeof buffer));
+        else 
+        {
+            int status;
+            wait(&status);
+            exit(0);
+        }
+    }
+
+    else if(strcmp(first,"help")==0) 
+    {   
+        pid_t pid = fork();
+        if (pid == 0) printHelp();
+        else 
+        {
+            int status;
+            wait(&status);
+            exit(0);
+        }
+        printHelp();
+    }
+    else if(strcmp(first,"prt")==0) 
+    {   
+        pid_t pid = fork();
+        if (pid == 0) prt();
+        else 
+        {
+            int status;
+            wait(&status);
+            exit(0);
+        }
+    }
 
 
     //Check all cases with multiple args
