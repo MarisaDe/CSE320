@@ -5,6 +5,7 @@
 
 extern char Ucolor[128];
 extern char Mcolor[128];
+extern char prevBuffer[1024];
 extern int userFlag;
 extern int machineFlag;
 extern char* prevDirectory;

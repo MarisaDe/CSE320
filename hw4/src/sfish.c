@@ -6,6 +6,7 @@
 
 char Ucolor[128];
 char Mcolor[128];
+char prevBuffer[1024];
 int userFlag = 1;
 int machineFlag = 1;
 char* prevDirectory;
@@ -233,7 +234,7 @@ void parse(char* cmd)
         second = strtok(NULL, " ");
         if(second == NULL)
         {
-            prevDirectory = getcwd(buffer, sizeof buffer);
+            prevDirectory = getcwd(prevBuffer, sizeof prevBuffer);
             chdir(getenv("HOME"));
             printf("%s\n", getenv("HOME"));
             prtValue = 0; //SUCCESS
@@ -258,7 +259,7 @@ void parse(char* cmd)
             {
 
                 closedir(dir);
-                prevDirectory = getcwd(buffer, sizeof buffer);
+                prevDirectory = getcwd(prevBuffer, sizeof prevBuffer);
                 chdir(second);
                 printf("%s\n", prevDirectory);
                 prtValue = 0; //SUCCESS
@@ -274,7 +275,7 @@ void parse(char* cmd)
         }
         else //The only input was cd.
         {
-            prevDirectory = getcwd(buffer, sizeof buffer);
+            prevDirectory = getcwd(prevBuffer, sizeof prevBuffer);
             chdir(getenv("HOME"));
             printf("%s\n", prevDirectory);
             prtValue = 0; //SUCCESS
