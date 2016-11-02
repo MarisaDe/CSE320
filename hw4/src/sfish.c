@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 char Ucolor[128];
 char Mcolor[128];
@@ -207,10 +208,40 @@ void prt()
     prtValue = 0;
 }
 
-void parse(char* cmd)
-{
-    printf("%s%s\n", "previous directory:", prevDirectory);
 
+void executables(char* cmd)
+{
+
+    //if it IS a /
+    //check for slash here
+
+
+    //if it's NOT a /
+    char buff[1024];
+    struct stat buffer;
+    char* checkpath;
+    int checkstat = -1;
+    char path[1024];
+    strcpy(path,getenv("PATH"));
+    checkpath = strtok(path, ":");
+    while(checkpath!= NULL) //It's not in the path, try the next one.
+    {
+        snprintf(buff, sizeof(buff), "%s%s%s", checkpath, "/",cmd);
+        checkstat = stat(buff, &buffer);
+        if(checkstat == 0) //the cmd was found!!
+        {
+           // execl(buff, (char*)0, (char*)NULL);
+            break;
+        }
+        printf("%s\n", buff);
+        checkpath = strtok(NULL, ":");     
+    }
+    return;
+}
+
+
+void builtins(char* cmd)
+{
     char buffer[1028];
     char *first;
     char *second;
@@ -362,10 +393,11 @@ void parse(char* cmd)
     }
     else if(first != NULL)
     {
-       printf("%s\n", "Command not found");
-       prtValue = 127;
-       errno = EINVAL;
-       return; 
+       // printf("%s\n", "Command not found");
+       // prtValue = 127;
+       // errno = EINVAL;
+       // return; 
+        executables(cmd);
     }
 
     
@@ -390,7 +422,7 @@ int main(int argc, char** argv) {
 
     while((cmd = readline((sfish(buffer)))) != NULL) {
 
-        parse(cmd);
+        builtins(cmd);
 
         //All your debug print statments should be surrounded by this #ifdef
         //block. Use the debug target in the makefile to run with these enabled.

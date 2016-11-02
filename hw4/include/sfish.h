@@ -43,7 +43,7 @@ void chmpt(char* setting, char* toggle);
 * 	Checks the user input from the shell.
 * 	@param cmd -  current input
 */
-void parse(char* cmd);
+void builtins(char* cmd);
 
 
 /*
