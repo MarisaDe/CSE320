@@ -1,3 +1,5 @@
+#ifndef SFISH_H
+#define SFISH_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <readline/readline.h>
@@ -50,3 +52,8 @@ void builtins(char* cmd);
 * 	Helper method that prints the error message.	
 */
 void error();
+
+
+void executables(char* cmd);
+
+#endif
