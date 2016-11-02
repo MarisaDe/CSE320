@@ -69,35 +69,32 @@ const char* sfish(char* buffer)
 
 void executables(char* cmd)
 {
-
-    //if it IS a /
-    //check for slash here
-
-
-    //if it's NOT a /
     char buff[1024];
     struct stat buffer;
     char* checkpath;
     int checkstat = -1;
     char path[1024];
-
+    char* cmd2 = strdup(cmd);
     char* iterate;
     int count = 0;
-    iterate = strtok(cmd, " ");
+    iterate = strtok(cmd2, " ");
     while(iterate!=NULL)
     {
         count++;
         iterate = strtok(NULL, " ");
     }
 
+    char* space = " ";
     char* argv[count];
+    free(cmd2);
     char* fillArray;
-    fillArray = strtok(cmd, " ");
+    fillArray = strtok(cmd, space);
     int i = 0;
     while(fillArray != NULL)
     {
         argv[i] = fillArray;
-        fillArray = strtok(NULL, " ");
+        printf("%s\n", argv[i] );
+        fillArray = strtok(NULL, space);
         i++;
     }
     argv[i] = NULL;
@@ -105,7 +102,7 @@ void executables(char* cmd)
     checkpath = strtok(path, ":");
     while(checkpath!= NULL) //It's not in the path, try the next one.
     {
-        snprintf(buff, sizeof(buff), "%s%s%s", checkpath, "/",cmd);
+        snprintf(buff, sizeof(buff), "%s%s%s", checkpath, "/", argv[0]);
         checkstat = stat(buff, &buffer);
         if(checkstat == 0) //the cmd was found!!
         {
@@ -113,7 +110,7 @@ void executables(char* cmd)
             if (pid == 0) 
             {
                 execv(buff, argv);
-               // break;
+                break;
             }
             else 
             {

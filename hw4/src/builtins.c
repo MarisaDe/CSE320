@@ -169,7 +169,8 @@ void builtins(char* cmd)
     char *second;
     char *third;
     char *fourth;
-    
+    char* cmdcopy = strdup(cmd);
+
     first = strtok(cmd, " ");
     if (first == NULL) return;
 
@@ -319,7 +320,9 @@ void builtins(char* cmd)
        // prtValue = 127;
        // errno = EINVAL;
        // return; 
-        executables(cmd);
+        executables(cmdcopy);
+        free(cmdcopy);
+        return;
     }
 
     
