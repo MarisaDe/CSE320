@@ -143,6 +143,7 @@ int main(int argc, char** argv) {
     while((cmd = readline((sfish(buffer)))) != NULL) {
 
         builtins(cmd);
+        free(cmd);
 
         //All your debug print statments should be surrounded by this #ifdef
         //block. Use the debug target in the makefile to run with these enabled.
