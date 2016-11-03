@@ -257,7 +257,7 @@ void builtins(char* cmd)
             else     //The directory doesn't exist.
             {
                 errno = ENOENT;
-                printf("%s\n", "No such file or directory");
+                perror("sfish");
                 prtValue = 1;
                 free(cmdcopy);
                 return;

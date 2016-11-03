@@ -109,15 +109,17 @@ void executables(char* cmd)
             {
                 execv(cmd, argv);
                 prtValue = 0;
+
             }
             else 
             {
                 int status;
                 wait(&status);
+                prtValue = WEXITSTATUS(status); 
             }
         return;
         }
-        prtValue = -1;
+        prtValue = 1;
         perror("sfish");
         return;  
     }
@@ -134,20 +136,22 @@ void executables(char* cmd)
             pid_t pid = fork();
             if (pid == 0) 
             {
-                execv(buff, argv);
                 prtValue = 0;
+                execv(buff, argv);
             }
             else 
             {
                 int status;
                 wait(&status);
-            }
+                prtValue = WEXITSTATUS(status); 
+            }  
          return;   
         }
         checkpath = strtok(NULL, ":");     
     }
-    prtValue = -1;
-    perror("sfish");
+    prtValue = 127;
+    errno = EINVAL;
+    printf("%s%s\n",argv[0], ": command not found.");
     return;
  }
 
