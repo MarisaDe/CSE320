@@ -69,11 +69,9 @@ const char* sfish(char* buffer)
 
 void executables(char* cmd)
 {
-    char buff[1024];
     struct stat buffer;
     char* checkpath;
     int checkstat = -1;
-    char path[1024];
     char* cmd2 = strdup(cmd);
     char* iterate;
     int count = 0;
@@ -93,13 +91,40 @@ void executables(char* cmd)
     while(fillArray != NULL)
     {
         argv[i] = fillArray;
-        printf("%s\n", argv[i] );
         fillArray = strtok(NULL, space);
         i++;
     }
     argv[i] = NULL;
+
+    // CHECK IF THERE IS A SLASH IN FRONT
+
+
+    if(cmd[0]=='/' || (cmd[0]=='.' && cmd[1]=='/'))
+    {
+        checkstat = stat(cmd, &buffer); 
+        if(checkstat == 0) //the cmd was found!!
+        {
+            pid_t pid = fork();
+            if (pid == 0) 
+            {
+                execv(cmd, argv);
+                prtValue = 0;
+            }
+            else 
+            {
+                int status;
+                wait(&status);
+            }
+        return;
+        }
+        prtValue = -1;
+        perror("sfish");
+        return;  
+    }
+    char path[1024];
     strcpy(path,getenv("PATH"));
     checkpath = strtok(path, ":");
+    char buff[1024];
     while(checkpath!= NULL) //It's not in the path, try the next one.
     {
         snprintf(buff, sizeof(buff), "%s%s%s", checkpath, "/", argv[0]);
@@ -110,16 +135,19 @@ void executables(char* cmd)
             if (pid == 0) 
             {
                 execv(buff, argv);
-                break;
+                prtValue = 0;
             }
             else 
             {
                 int status;
                 wait(&status);
             }
+         return;   
         }
         checkpath = strtok(NULL, ":");     
     }
+    prtValue = -1;
+    perror("sfish");
     return;
  }
 

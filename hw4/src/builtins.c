@@ -198,7 +198,6 @@ void builtins(char* cmd)
             wait(&status);
             exit(0);
         }
-        printHelp();
     }
     else if(strcmp(first,"prt")==0) 
     {   
@@ -226,6 +225,7 @@ void builtins(char* cmd)
             chdir(getenv("HOME"));
             printf("%s\n", getenv("HOME"));
             prtValue = 0; //SUCCESS
+            free(cmdcopy);
             return;
         }
 
@@ -237,6 +237,7 @@ void builtins(char* cmd)
             chdir(prevDirectory);
             strcpy(prevDirectory, holdDirectory);
             prtValue = 0; //SUCCESS
+            free(cmdcopy);
             return;
         }
         else if (second != NULL) //User typed cd and at least a second arg.
@@ -249,8 +250,8 @@ void builtins(char* cmd)
                 closedir(dir);
                 prevDirectory = getcwd(prevBuffer, sizeof prevBuffer);
                 chdir(second);
-                printf("%s\n", prevDirectory);
                 prtValue = 0; //SUCCESS
+                free(cmdcopy);
                 return;
             }
             else     //The directory doesn't exist.
@@ -258,6 +259,7 @@ void builtins(char* cmd)
                 errno = ENOENT;
                 printf("%s\n", "No such file or directory");
                 prtValue = 1;
+                free(cmdcopy);
                 return;
             }
         }
@@ -267,6 +269,7 @@ void builtins(char* cmd)
             chdir(getenv("HOME"));
             printf("%s\n", prevDirectory);
             prtValue = 0; //SUCCESS
+            free(cmdcopy);
             return;
         }
     }
@@ -277,15 +280,18 @@ void builtins(char* cmd)
         if(second == NULL) 
         {
             error();
+            free(cmdcopy);
             return;
         }
         third = strtok(NULL, " ");
         if(third == NULL)
         {
             error();
+            free(cmdcopy);
             return;
         }
         chmpt(second, third);
+        free(cmdcopy);
         return;
     }
 
@@ -295,12 +301,14 @@ void builtins(char* cmd)
         if(second == NULL)
         {
             error();
+            free(cmdcopy);
             return;
         } 
         third = strtok(NULL, " "); 
         if(third == NULL)
         {
             error();
+            free(cmdcopy);
             return;
         }
         fourth = strtok(NULL, " ");
@@ -308,10 +316,12 @@ void builtins(char* cmd)
         if(fourth == NULL)
         {
             error();
+            free(cmdcopy);
             return;
         }
 
         setColor(second, third, fourth);
+        free(cmdcopy);
         return;
     }
     else if(first != NULL)
