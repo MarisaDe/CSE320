@@ -334,6 +334,6 @@ void builtins(char* cmd)
         free(cmdcopy);
         return;
     }
+}
 
     
-}

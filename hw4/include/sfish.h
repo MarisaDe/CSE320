@@ -1,5 +1,6 @@
 #ifndef SFISH_H
 #define SFISH_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <readline/readline.h>
@@ -12,6 +13,46 @@ extern int userFlag;
 extern int machineFlag;
 extern char* prevDirectory;
 extern int prtValue;
+extern char* writeTo;
+
+//length of argv;
+extern int argvLen;
+//An array of the user input
+extern char** argv;
+
+extern int commandLen;
+
+
+typedef int bool;
+#define true 1
+#define false 0
+
+typedef struct job{
+    char** com; 
+    int PID;
+    int jobNum;
+    char* command;
+    char* status;
+} job;
+
+
+typedef struct command {
+    char** command; 
+    char* input;
+    char* output; 
+    bool pipe; 
+    char* next; 
+    char* prev; 
+} command;
+
+
+
+//An array of commands
+extern command** commandArr;
+
+//extern command* insert;
+
+
 
 /*  
 *	Sets the color and boldness of the prompt specified by colorFlag.
@@ -52,6 +93,11 @@ void builtins(char* cmd);
 * 	Helper method that prints the error message.	
 */
 void error();
+
+/*
+* 	Helper method that parses through user input and puts it into an array.
+*/
+void parse(char* cmd);
 
 
 void executables(char* cmd);
