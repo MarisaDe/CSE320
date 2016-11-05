@@ -97,7 +97,7 @@ void error();
 /*
 * 	Helper method that parses through user input and puts it into an array.
 */
-void parse(char* cmd);
+void parse(char* command, int* argc, char** argv);
 
 
 void executables(char* cmd);

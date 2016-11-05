@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 char Ucolor[128];
 char Mcolor[128];
@@ -14,6 +15,12 @@ int userFlag = 1;
 int machineFlag = 1;
 char* prevDirectory;
 int prtValue;
+char* writeTo = NULL;
+char** argv;
+command** commandArr;
+int argvLen;
+int commandLen;
+//command* insert;
 
  #define RED     "\033[22;31"
  #define GREEN   "\033[22;32"
@@ -28,40 +35,63 @@ int prtValue;
 void error()
 {
     errno = EINVAL;
-    printf("%s\n", "Invalid argument");
+    perror("sfish");
     prtValue = 1;
 }
 
 
 const char* sfish(char* buffer)
 {
-    //char buffy[128];
-    char cwd[128];
-    //gethostname(buffy, sizeof buffy);
+    char cwd[1024];
+    char cwd2[1024];
+    char* temp;
     getcwd(cwd, sizeof(cwd));
-    //char user = getenv("USER");
-
-    if(strcmp(cwd,getenv("HOME")) == 0) strcpy(cwd,"~");
+    temp = strstr(cwd,getenv("HOME"));
+    char temp2[1024] = "";
+    //If the homepath is in cwd, put a ~
+    //if the home substring has been found
+    if(strstr(cwd,getenv("HOME"))) 
+    {       
+        //temp = strtok(cwd,getenv("HOME"));
+        if(strlen(temp)!= strlen(getenv("HOME")))   //if home length and directory length are not the same
+        {
+            temp =  strstr(temp, getenv("USER"));   //get the user substring ex: mdepasquale
+            strtok(temp, "/");                      //tokenize the /  (mdepasquale/Desktop) -> (mdepasquale)
+            temp = strtok(NULL, "/");              //tokenize the / once more (mdepasquale/Desktop/) -> (Desktop)
+            strcpy(temp2,temp);                    //Both should be desktop atm.
+            temp = strtok(NULL, "/");
+             while(temp)
+             {
+                 strcat(temp2,"/");
+                 strcat(temp2, temp);
+                 temp = strtok(NULL, "/");
+                 //temp = NULL;
+             }
+            strcpy(cwd2,"~/");
+            strcat(cwd2,temp2);
+        }
+        else  strcpy(cwd2,"~");
+    }
     if(userFlag == 1 && machineFlag == 1){
 
-        snprintf(buffer, 1024, "%s%s%s%s%s%s%s%s", "sfish-", Ucolor, "@", Mcolor, ":", "[", cwd, "]> ");
+        snprintf(buffer, 1024, "%s%s%s%s%s%s%s%s", "sfish-", Ucolor, "@", Mcolor, ":", "[", cwd2, "]> ");
         return buffer;
     }
     else if (userFlag == 1){
 
-        snprintf(buffer, 1024, "%s%s%s%s%s%s", "sfish-", Ucolor, ":", "[", cwd, "]> ");
+        snprintf(buffer, 1024, "%s%s%s%s%s%s", "sfish-", Ucolor, ":", "[", cwd2, "]> ");
         return buffer;
     }
 
     else if(machineFlag == 1){
 
-        snprintf(buffer, 1024, "%s%s%s%s%s%s", "sfish-", Mcolor, ":", "[", cwd, "]> ");
+        snprintf(buffer, 1024, "%s%s%s%s%s%s", "sfish-", Mcolor, ":", "[", cwd2, "]> ");
         return buffer;
     }
 
     else{
 
-        snprintf(buffer, 1024, "%s%s%s%s", "sfish:", "[", cwd, "]> ");
+        snprintf(buffer, 1024, "%s%s%s%s", "sfish:", "[", cwd2, "]> ");
         return buffer;
     }
   
@@ -69,6 +99,8 @@ const char* sfish(char* buffer)
 
 void executables(char* cmd)
 {
+    char* input;
+    char* output;
     struct stat buffer;
     char* checkpath;
     int checkstat = -1;
@@ -82,21 +114,101 @@ void executables(char* cmd)
         iterate = strtok(NULL, " ");
     }
 
+    char path[1024];
+    strcpy(path,getenv("PATH"));
+    char buff[1024];
     char* space = " ";
-    char* argv[count];
+    char* argv[count];  
     free(cmd2);
     char* fillArray;
     fillArray = strtok(cmd, space);
     int i = 0;
+    char* argv2[count];
     while(fillArray != NULL)
     {
         argv[i] = fillArray;
         fillArray = strtok(NULL, space);
         i++;
     }
-    argv[i] = NULL;
+    argv[i] = NULL;                 //ARGV IS FILLED WITH ALL THE INPUT!
+    //i = 0;
 
-    // CHECK IF THERE IS A SLASH IN FRONT
+    checkpath = strtok(path, ":");
+    for(int i = 0; i < count; i++)
+    {
+        if(strcmp(argv[i], ">") == 0 && (i+1) < count)
+        {          
+            argv2[i+1] = NULL;
+            output = argv[i+1];
+            while(checkpath!= NULL) //It's not in the path, try the next one.
+            {
+                snprintf(buff, sizeof(buff), "%s%s%s", checkpath, "/", argv[0]);
+                checkstat = stat(buff, &buffer);
+                if(checkstat == 0) //the cmd was found!!
+                {
+                    pid_t pid = fork();
+                    if (pid == 0) 
+                    {
+                        int writeToFile = open(output, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+                        dup2(writeToFile, 1);
+                        close(writeToFile);
+                        prtValue = 0;
+                        execv(buff, argv2);
+                        return;
+                    }
+                    else 
+                    {
+                        int status;
+                        wait(&status);
+                        prtValue = WEXITSTATUS(status); 
+                        return;
+                    }  
+                 return;   
+                }
+                checkpath = strtok(NULL, ":");     
+            }
+        }
+        else if(strcmp(argv[i], "<") == 0 && (i+1) < count)
+        {
+         
+            argv2[i+1] = NULL;
+            input = argv[i+1];;
+            while(checkpath!= NULL) //It's not in the path, try the next one.
+            {
+                snprintf(buff, sizeof(buff), "%s%s%s", checkpath, "/", argv[0]);
+                checkstat = stat(buff, &buffer);
+                if(checkstat == 0) //the cmd was found!!
+                {
+                    pid_t pid = fork();
+                    if (pid == 0) 
+                    {
+                        int writeToFile = open(input, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+                        dup2(writeToFile, 0);
+                        close(writeToFile);
+                        prtValue = 0;
+                        execv(buff, argv2);
+                        return;
+                    }
+                    else 
+                    {
+                        int status;
+                        wait(&status);
+                        prtValue = WEXITSTATUS(status); 
+                        return;
+                    }  
+                 return;   
+                }
+                checkpath = strtok(NULL, ":");     
+            }
+        }
+        argv2[i] = argv[i];
+        //argv[i] = fillArray;
+        //fillArray = strtok(NULL, space);
+        
+    }
+    
+
+    // CHECK IF THERE IS A SLASH IN FRONT does it for us already
 
 
     if(cmd[0]=='/' || (cmd[0]=='.' && cmd[1]=='/'))
@@ -123,14 +235,13 @@ void executables(char* cmd)
         perror("sfish");
         return;  
     }
-    char path[1024];
+
     strcpy(path,getenv("PATH"));
     checkpath = strtok(path, ":");
-    char buff[1024];
     while(checkpath!= NULL) //It's not in the path, try the next one.
     {
         snprintf(buff, sizeof(buff), "%s%s%s", checkpath, "/", argv[0]);
-        checkstat = stat(buff, &buffer);
+        checkstat = stat(buff, &buffer);  
         if(checkstat == 0) //the cmd was found!!
         {
             pid_t pid = fork();
@@ -153,7 +264,7 @@ void executables(char* cmd)
     errno = EINVAL;
     printf("%s%s\n",argv[0], ": command not found.");
     return;
- }
+   }
 
 int main(int argc, char** argv) {
     //DO NOT MODIFY THIS. If you do you will get a ZERO.
@@ -169,8 +280,8 @@ int main(int argc, char** argv) {
     prevDirectory = getenv("HOME");
     char buffer[1024];
     //set initial colors to white
-    setColor("user", "blue", "0");
-    setColor("machine", "green", "1");
+    setColor("user", "white", "0");
+    setColor("machine", "white", "1");
 
     while((cmd = readline((sfish(buffer)))) != NULL) {
 

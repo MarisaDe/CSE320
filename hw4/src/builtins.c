@@ -161,15 +161,15 @@ void printHelp()
     printf("\t\t%s\n\n", "0: Disabled");
 }
 
-
 void builtins(char* cmd)
 {
+    char* cmdcopy = strdup(cmd);
     char buffer[1028];
     char *first;
     char *second;
     char *third;
     char *fourth;
-    char* cmdcopy = strdup(cmd);
+    
 
     first = strtok(cmd, " ");
     if (first == NULL) return;
