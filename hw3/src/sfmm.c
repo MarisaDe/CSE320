@@ -78,6 +78,12 @@ void *sf_fillAlloc(int payload, int padding, int total, sf_free_header* fill)
 	allocations++;
 	internal += SF_HEADER_SIZE + SF_FOOTER_SIZE + padding;
 	updateExternal();
+
+	if(external == total)
+	{
+		freelist_head = NULL;
+	}
+
 	return (char*)mem + SF_HEADER_SIZE;
 
 
@@ -177,8 +183,7 @@ void *sf_malloc(size_t size){
 
 // BASE CASES //////////////////////////////////////////////////////////////
 
-if (size == 0) return NULL;
-if (size > 16384){		//If size > 4 pages, error occurs.
+if (size > 16384 || size == 0){		//If size > 4 pages, error occurs.
 	errno = EINVAL;
 	return NULL;
 }
@@ -459,7 +464,7 @@ void sf_free(void *ptr){
 		//Add the free bytes to the external variable.
 		external+= alloc_free_h->header.block_size << 4;
 		frees++;
-		 sf_snapshot(true);
+		sf_snapshot(true);
 		return;
 
 	}
@@ -480,8 +485,7 @@ void *sf_realloc(void *ptr, size_t size){
 
 // BASE CASES ///////////////////////////////////////////////
 
-if (size == 0) return NULL;
-if (size > 16384)		//If size > 4 pages, error occurs.
+if (size > 16384 || size == 0) //If size > 4 pages, error occurs.
 {		
 	errno = EINVAL;
 	return NULL;
@@ -522,6 +526,20 @@ else
 //Free up the whole block. The free space gets put at the head of the list. 
 //So it will then immediately find that and place it right back where it's supposed to go.
 if(checkHead->block_size < total)
+{
+	char* reallocate;
+	char saveData[size];
+	memset(saveData, 0, size);
+	sf_header* reallocHeader = (sf_header*)(ptrH);
+  	memcpy(saveData, ptr, (reallocHeader->block_size << 4) - 16);
+  	
+  	sf_free(ptr);
+	reallocate = sf_malloc(size);
+	*reallocate = *saveData;
+	return reallocate;
+}
+
+if(checkHead->block_size > total)
 {
 	char* reallocate;
 	char saveData[size];
