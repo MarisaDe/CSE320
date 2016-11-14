@@ -81,7 +81,7 @@ void *sf_fillAlloc(int payload, int padding, int total, sf_free_header* fill)
 
 	if(external == 0)
 	{
-		printf("%s%lu\n", "External block size:", external);
+		freelist_head = NULL;
 	}
 	return (char*)mem + SF_HEADER_SIZE;
 
