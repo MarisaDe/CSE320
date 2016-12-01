@@ -1,4 +1,4 @@
 # Lord of the Threads
 
-## Author:
-### ID:
+## Author: Marisa DePasquale
+### ID: 109075332

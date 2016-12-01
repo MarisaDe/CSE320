@@ -1,6 +1,7 @@
 #ifndef LOTT_H
 #define LOTT_H
 
+#include "lott2.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +9,8 @@
 #include <errno.h>
 #include <string.h>
 
+#define UNUSED(x) (void)(x)
+#define SUPPRESS_UNUSED() UNUSED(QUERY_STRINGS); UNUSED(PART_STRINGS)
 #define DATA_DIR "data"
 
 #define HELP do{ \
