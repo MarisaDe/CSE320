@@ -8,10 +8,16 @@
 #include <errno.h>
 #include <string.h>
 
+
+extern int numfiles;
 //This is the struct that the map function will return
 typedef struct mapStruct{
     char file[512];
     int numFiles;
+    float avgDur;
+    char* year;
+    double avgUser;
+    char* ccode;
     //double avgDuration;
     //double avgUser;
     //int countryCodes;
@@ -27,11 +33,20 @@ typedef struct reduceStruct{
 
 } reduceStruct;
 
-extern int numfiles;
+typedef struct mapResults{
+    mapStruct* resultArray; 
+} mapResults;
+
 
 //Functions
 
 int nfiles(char* dir);
+
+float avgDuration(FILE* fp,  int duration[], int size);
+
+//int avgPerYear(FILE* fp);
+
+int ccodes(FILE* fp);
 
 #endif /* LOTT2_H */
 
