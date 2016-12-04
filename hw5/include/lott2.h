@@ -12,7 +12,8 @@
 extern int numfiles;
 //This is the struct that the map function will return
 typedef struct mapStruct{
-    char file[512];
+    char file[512];             //this includes the data/ portion
+    char filename[512];         //the filename after data/
     int numFiles;
     float avgDur;
     char* year;
@@ -26,10 +27,12 @@ typedef struct mapStruct{
 
 //This it the struct that the reduce function will return
 typedef struct reduceStruct{
+    char filename[512];
     int maxUsers;
-    double minDuration;
-    double maxDuration;
-    int countryCodes;
+    float minDuration;
+    float maxDuration;
+    char ccode;
+    float result;
 
 } reduceStruct;
 

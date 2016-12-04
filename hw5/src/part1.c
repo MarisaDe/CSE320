@@ -44,6 +44,7 @@ int part1(){
 
                 if(strcmp(direntry->d_name, ".") != 0 && strcmp(direntry->d_name, "..") != 0 )
                 {   
+                    strcpy(mapArray[i].filename, direntry->d_name);
                     strcat(filepath, direntry->d_name);
                     strcpy(mapArray[i].file, filepath);         //get the file name so map know which file to open
                     mapArray[i].numFiles = numfiles;
@@ -65,16 +66,22 @@ int part1(){
             }
 
             //allData->resultArray = results;
-            reduce(results);
-            free(results);       
-        }
-    }
-    /////////////////////////////////////////////////////////
-    printf(
-        "Part: %s\n"
-        "Query: %s\n",
-        PART_STRINGS[current_part], QUERY_STRINGS[current_query]);
+            reduceStruct* rResults;
+            rResults = reduce(results);   
 
+            printf(
+            "Part: %s\nQuery: %s\nResult: %.5g, %s\n",
+            PART_STRINGS[current_part], QUERY_STRINGS[current_query], rResults->result, rResults->filename);
+            free(results);    
+        }
+    
+    /////////////////////////////////////////////////////////
+    // printf(
+    //     "Part: %s\n"
+    //     "Query: %s\n",
+    //     PART_STRINGS[current_part], QUERY_STRINGS[current_query]);
+
+    }
     return 0;
 }
 
@@ -152,10 +159,6 @@ static void* map(void* v){
 
 
 
-
-
-
-
 static void* reduce(void* v){
     //printf("%s", "PLEASE DONT SEG FAULT DEAR GOD");
     mapStruct* f = (mapStruct*)v;
@@ -174,30 +177,34 @@ static void* reduce(void* v){
 
              if(f[i].avgDur > max)
              {
-                 max = f[i].avgDur;
-                 
+                 max = f[i].avgDur; 
+                 strcpy(compile->filename, f[i].filename);      
              }
           }
           compile->maxDuration = max;
-          printf("%s%f\n", "MAX: ", max);
-          return NULL;
+          compile->result = max;
+          //printf("%s%f\n", "MAX: ", max);
+          return compile;
     }
     
     //Gets MIN of averages
     if(current_query == B)
     {
-         double min = 0;
+         float min = f[0].avgDur;
          for(int i = 0; i < numfiles; i++)
          {
+            printf("%s%f\n", "element: ", f[i].avgDur);
+
             if(f[i].avgDur < min)
             {
                 min = f[i].avgDur;
+                strcpy(compile->filename, f[i].filename);
             }
          }
          compile->maxDuration = min;
-         printf("%f", min);
-         free(f);
-         return NULL;
+         compile->result = min;
+         //printf("%s%f\n", "MIN: ", min);
+         return compile;
      }
     
     return NULL;
