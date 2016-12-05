@@ -17,7 +17,8 @@ typedef struct mapStruct{
     int numFiles;
     float avgDur;
     char* year;
-    double avgUser;
+    float* avgUser;
+    float userCount;
     char* ccode;
     //double avgDuration;
     //double avgUser;
@@ -28,7 +29,8 @@ typedef struct mapStruct{
 //This it the struct that the reduce function will return
 typedef struct reduceStruct{
     char filename[512];
-    int maxUsers;
+    float maxUsers;
+    float minUsers;
     float minDuration;
     float maxDuration;
     char ccode;
@@ -47,7 +49,7 @@ int nfiles(char* dir);
 
 float avgDuration(FILE* fp,  int duration[], int size);
 
-//int avgPerYear(FILE* fp);
+float countPerYear(FILE *fp, int year[], int size);
 
 int ccodes(FILE* fp);
 

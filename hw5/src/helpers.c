@@ -53,29 +53,31 @@ float avgDuration(FILE *fp,  int duration[], int size )
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// int avgPerYear(FILE *fp)
-// {
-//     int count[numfiles];                      //create an int array to store all the duration ints
-//     int n = 0;
-//     char *line = NULL;
-//     size_t len = 0;
-//     while(getline(&line, &len, fp) != -1)     //go through each line in the file
-//     {
-//         char* time = strtok(line, ",");
-//         //do something with the time so we know the year
+float countPerYear(FILE *fp, int year[], int size)
+{
+	int years[51] = {0};
+	int sum = 0;
+	for(int i = 0; i < size; i++)
+	{
+		int yearInt = year[i];  
+		yearInt -= 1970;						//This will give us the proper index. (from 0 - 49)
+		years[yearInt] = years[yearInt] + 1;		//tally up the users for each year.
+	}
 
+	int count = 0;
+	for(int i = 0; i < 51; i++)
+	{
+		if(years[i] != 0)
+		{
+			sum += years[i];
+			//printf("%i\n",years[i]);
+			count++;
+		}		
+	}
+	//printf("%s%i\n","COUNT: ",count);
+	return ((float)sum/(float)count);
 
-//         for(int i = 0; i < 2; i++)
-//         {
-//             char* token = strtok(0, ",");
-//         }
-//         //printf("%s\n", token);
-//         count[n] = (token);
-//         printf("%i\n", count[n]);
-//         n++;
-//     }
-//     return 0;
-// }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 int ccodes(FILE *fp)
