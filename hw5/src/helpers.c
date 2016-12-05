@@ -61,7 +61,7 @@ float countPerYear(FILE *fp, int year[], int size)
 	{
 		int yearInt = year[i];  
 		yearInt -= 1970;						//This will give us the proper index. (from 0 - 49)
-		years[yearInt] = years[yearInt] + 1;		//tally up the users for each year.
+		years[yearInt] = years[yearInt] + 1;    //tally up the users for each year.
 	}
 
 	int count = 0;
@@ -69,35 +69,107 @@ float countPerYear(FILE *fp, int year[], int size)
 	{
 		if(years[i] != 0)
 		{
-			sum += years[i];
-			//printf("%i\n",years[i]);
-			count++;
+			sum += years[i];					//Gather total amount of users in a file
+			count++;							//Gather total years used in the file.
 		}		
 	}
-	//printf("%s%i\n","COUNT: ",count);
 	return ((float)sum/(float)count);
 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-int ccodes(FILE *fp)
+void ccodes(FILE *fp, char* ccode[],int size, mapStruct* f)
 {
-    char* codes[numfiles];                  //create an int array to store all the codes
-    int n = 0;
-    char *line = NULL;
-    size_t len = 0;
-    while(getline(&line, &len, fp) != -1)   //go through each line in the file
-    {
-        char* token = strtok(line, ",");
-        //do something with the time so we know the year
-        for(int i = 0; i < 3; i++)
+	//MAX 10 Country codes at any times
+	char* trackCodes[10] = {0};
+	int trackFreq[10] = {0};
+	//Go through all the lines in the file and parse through the country codes
+	for(int i = 0; i < size; i++)
+	{
+	 	for(int n = 0; n < 10; n++) 						//go through the track array to see if ccode matches
+	 	{
+	 		if(trackCodes[n] == NULL)
+	 		{
+	 			trackCodes[n] = ccode[i];
+	 			trackFreq[n] = trackFreq[n]+1;
+	 			n = 9;
+	 		}
+	 		else if(strcmp(ccode[i],trackCodes[n]) == 0)
+	 		{
+	 			trackFreq[n] = trackFreq[n] + 1; 			//update frequency array.
+	 			n=9;
+	 		}
+	 	}
+		 
+	}
+
+	int maxFreq = 0;
+	for(int i = 0; i < 10; i++)
+	{
+		if(maxFreq < trackFreq[i])
+		{
+			maxFreq = trackFreq[i];		//obtain the highest freq
+			f->ccode = trackCodes[i]; 	//Obtain country code.
+
+		}
+		else if(maxFreq == trackFreq[i] && strcmp(trackCodes[i], f->ccode) < 0)
         {
-            token = strtok(0, ",");
+			maxFreq = trackFreq[i];		//obtain the highest freq
+			f->ccode = trackCodes[i]; 	//Obtain country code.
+
         }
-        //printf("%s\n", token);
-        codes[n] = token;				//puts the code in the array
-        printf("%s\n", codes[n]);
-        n++;
-    }
-    return 0;
+
+	}
+	f->countryUsers = maxFreq;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void reduceCcodes(mapStruct* f, reduceStruct* compile)
+{
+	//MAX 10 Country codes at any times
+	char* trackCodes[10] = {0};
+	int trackFreq[10] = {0};
+
+	//Initial stuff to print
+	compile->ccode = f[0].ccode;		//It doesn't really matter what this is.
+	strcpy(compile->filename, f[0].filename);
+
+	//Go through all the lines in the file and parse through the country codes
+	for(int i = 0; i < numfiles; i++)
+	{
+	 	for(int n = 0; n < 10; n++) 						//go through the track array to see if ccode matches
+	 	{
+	 		if(trackCodes[n] == NULL)
+	 		{
+	 			trackCodes[n] = f[i].ccode;
+	 			trackFreq[n] = trackFreq[n] + f[i].countryUsers;
+	 			n = 9;
+	 		}
+	 		else if(strcmp(f[i].ccode,trackCodes[n]) == 0)
+	 		{
+	 			trackFreq[n] = trackFreq[n] + f[i].countryUsers; 			//update frequency array.
+	 			n = 9;
+	 		}
+	 	}
+		 
+	}
+
+	int maxFreq = 0;
+	compile->ccode = trackCodes[0];
+	for(int i = 0; i < 10; i++)
+	{
+		if(maxFreq < trackFreq[i])
+		{
+			maxFreq = trackFreq[i];				//obtain the highest freq
+			compile->ccode = trackCodes[i]; 	//Obtain country code.
+		}
+		else if(maxFreq == trackFreq[i] && strcmp(trackCodes[i], compile->ccode) < 0)
+        {
+			maxFreq = trackFreq[i];		//obtain the highest freq
+			compile->ccode = trackCodes[i]; 	//Obtain country code.
+        }
+	}
+	compile->result = maxFreq;
+	compile->freq = maxFreq;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////

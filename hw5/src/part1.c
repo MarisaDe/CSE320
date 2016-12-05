@@ -19,14 +19,13 @@ int part1(){
 
 
     ///////////////////////////////////////////////////////////////////////////
-    numfiles = nfiles(DATA_DIR);      //checks to see how many files are in the dir so we know how many threads to spawn.
-    //numfiles = 10;
+    //numfiles = nfiles(DATA_DIR);      //checks to see how many files are in the dir so we know how many threads to spawn.
+    numfiles = 5;
     printf("%i\n",numfiles);          //test the file path
     pthread_t threadfile[numfiles];   //make a thread for each file
     mapStruct mapArray[numfiles];     //make a struct to store info about each file
     mapStruct* results = malloc(sizeof(mapStruct)*numfiles);
     memset(results, 0, sizeof(&results));
-    //mapResults* allData = malloc(sizeof(mapResults)*numfiles);
     int i = 0;
     if(numfiles > 0)
     {
@@ -62,7 +61,8 @@ int part1(){
             {
                 pthread_join(threadfile[n], (void**)&result);
                 memcpy(&results[n],result,sizeof(mapStruct));
-                //printf("%s%f\n","UserCount: ", results[n].userCount);
+                printf("%i%s%i\n", n, " UserCount: ", results[n].countryUsers);
+                printf("%i%s%s\n", n ," Code: ", results[n].ccode);
                 //printf("%s%s\n","YEAR: ", result[n].year);
             }
 
@@ -70,18 +70,21 @@ int part1(){
             reduceStruct* rResults;
             rResults = reduce(results);   
 
-            printf(
-            "Part: %s\nQuery: %s\nResult: %.5g, %s\n",
-            PART_STRINGS[current_part], QUERY_STRINGS[current_query], rResults->result, rResults->filename);
-            free(results);    
+            if(current_query != E)
+            {
+                printf(
+                "Part: %s\nQuery: %s\nResult: %.7g, %s\n",
+                PART_STRINGS[current_part], QUERY_STRINGS[current_query], rResults->result, rResults->filename);
+            }
+            else
+            {
+                printf(
+                "Part: %s\nQuery: %s\nResult: %.7g, %s\n",
+                PART_STRINGS[current_part], QUERY_STRINGS[current_query], rResults->result, rResults->ccode);
+            }
+            free(results); 
+            free(rResults);   
         }
-    
-    /////////////////////////////////////////////////////////
-    // printf(
-    //     "Part: %s\n"
-    //     "Query: %s\n",
-    //     PART_STRINGS[current_part], QUERY_STRINGS[current_query]);
-
     }
     return 0;
 }
@@ -109,103 +112,112 @@ static void* map(void* v){
     fclose(fp);
     fp = fopen(f->file, "r");
     int duration[lines];                            //array of all the durations in the file
-    char* year;                              //array of all the years in the file
-    char* ccode[lines];                             //array of all the country codes in the file
-    char* ip[lines];                                //array of all the IP addresses in the file
+    char* year;                                     //array of all the years in the file
+    char* ccode[lines];                           //array of all the country codes in the file
     int i = 0;
     int* yearResults = malloc(sizeof(int)*lines);
+    time_t rawtime;
+    int transfer;
+    struct tm * timeinfo;
+    char buffer[512];
 
     while(fgets(line, 512, fp) != NULL)             //go through each line in the file
     {      
-        time_t rawtime;
-        int transfer;
-        struct tm * timeinfo;
-        char buffer [512];
         char* time = strtok_r(line, ",", &saveptr); //parse for the first comma
         transfer = strtol(time, &ptr, 10);          //convert char to int
         rawtime = (long long)transfer;              //convert int to long int
         timeinfo = localtime(&rawtime);             //get the tm struct to use for strftime
         strftime (buffer,80,"%Y",timeinfo);         //Get the year! (19xx - 20xx)
-        year = buffer;         
-        //printf("%s\n", year);                     //gets the time (year) puts it in the array.
+        year = buffer;           
         yearResults[i] = strtol(year, &ptr, 10); 
-        //printf("%i\n", yearResults[i]);
 
-        ip[i] = strtok_r(0, ",", &saveptr);         //gets the IP address (useless)
-        char* token = strtok_r(0, ",", &saveptr);   //gets the duration
+        char* token = strtok_r(0, ",", &saveptr);   //gets the IP address (useless)
+        token = strtok_r(0, ",", &saveptr);         //gets the duration
         duration[i] = strtol(token, &ptr, 10);      //makes duration a double
-        ccode[i]  = strtok_r(0, ",", &saveptr);     //gets country code.
+        token = strtok_r(0, ",", &saveptr);         //gets country code.
+        ccode[i] = malloc(strlen(token) + 1);
+        strcpy(ccode[i], token);
         i++;
     }
     fclose(fp);
     free(line);
+    f->ccodeToFree = ccode;
     //////////////////////////////////////////////////////////////////////// 
     
     //PERFORM SOME ANALYSIS ON THIS
     if(current_query == A || current_query == B)
     {
         f->avgDur = avgDuration(fp, duration, i);
-        printf("%s%f\n", "Avg to return:", f->avgDur);
-        return f;
+        f->userCount = 0.0;
+        
     }
     else if(current_query == C || current_query == D)
     {
         f->userCount = countPerYear(fp, yearResults, i);
-        //printf("%s%f\n", "Count to return:", f->userCount);
-        return f;
+        f->avgDur = 0.0;
+        
     }
     else if(current_query == E)
     {
-        printf("%s%i%s",ip[i],duration[i],ccode[i]);
-        ccodes(fp);
-    }                             
-    return NULL;
+        ccodes(fp, ccode, i, f);
+        f->userCount = 0.0;
+        f->avgDur = 0.0;  
+        return f;     
+    }    
+    else{
+        return NULL;
+    }
+
+    free(yearResults);
+    for(int i = 0; i < lines; i++)
+    {
+        free(ccode[i]);
+    }                         
+    return f;
 }
 
 
-////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static void* reduce(void* v){
-    //printf("%s", "PLEASE DONT SEG FAULT DEAR GOD");
     mapStruct* f = (mapStruct*)v;
-    malloc(sizeof(mapStruct)*numfiles);
-    //int size = sizeof(mapStruct)/sizeof(f[0]);
+    //malloc(sizeof(mapStruct)*numfiles);
     reduceStruct* compile = malloc(sizeof(reduceStruct));
 
 
     //Do operation based on query. This get MAX of avgs.
     if(current_query == A)
     {
-          float max = 0;
-          for(int i = 0; i < numfiles; i++)
-          {
-            printf("%s%f\n", "element: ", f[i].avgDur);
+        float max = 0.0;
+        max = f[0].avgDur;
+        strcpy(compile->filename, f[0].filename);
+        for(int i = 0; i < numfiles; i++)
+        {
 
-             if(f[i].avgDur > max)
-             {
-                 max = f[i].avgDur; 
-                 strcpy(compile->filename, f[i].filename);      
-             }
-             if(f[i].avgDur == max && strcmp(f[i].filename, compile->filename) < 0)
-             {
-                 max = f[i].avgDur; 
-                 strcpy(compile->filename, f[i].filename);      
-             }
-          }
-          compile->maxDuration = max;
-          compile->result = max;
-          //printf("%s%f\n", "MAX: ", max);
-          return compile;
+            if(f[i].avgDur > max)
+            {
+                max = f[i].avgDur; 
+                strcpy(compile->filename, f[i].filename);      
+            }
+            if(f[i].avgDur == max && strcmp(f[i].filename, compile->filename) < 0)
+            {
+                max = f[i].avgDur; 
+                strcpy(compile->filename, f[i].filename);      
+            }
+        }
+        compile->maxDuration = max;
+        compile->result = max;
+        return compile;
     }
     
     //Gets MIN of averages
-    if(current_query == B)
+    else if(current_query == B)
     {
-        float min = f[0].avgDur;
+        float min = 0.0;
+        min = f[0].avgDur;
+        strcpy(compile->filename, f[0].filename);
         for(int i = 0; i < numfiles; i++)
         {
-            printf("%s%f\n", "element: ", f[i].avgDur);
-
             if(f[i].avgDur < min)
             {
                 min = f[i].avgDur;
@@ -217,18 +229,19 @@ static void* reduce(void* v){
                 strcpy(compile->filename, f[i].filename);
             }
         }
-        compile->maxDuration = min;
+        compile->minDuration = min;
         compile->result = min;
-        //printf("%s%f\n", "MIN: ", min);
         return compile;
      }
 
-    if(current_query == C)
+    //Gets MAX of averages users
+    else if(current_query == C)
     {
-        float maxUsers = f[0].userCount;
+        float maxUsers = 0.0;
+        maxUsers = f[0].userCount;
+        strcpy(compile->filename, f[0].filename);
         for(int i = 0; i < numfiles; i++)
         {
-            //printf("%s%f\n", "userCount: ", f[i].userCount);
             if(f[i].userCount > maxUsers)
             {
                 maxUsers = f[i].userCount;
@@ -240,21 +253,19 @@ static void* reduce(void* v){
                 strcpy(compile->filename, f[i].filename);
             }
         }
-        //compile->maxDuration = min;
         compile->maxUsers = maxUsers;
         compile->result = maxUsers;
-        //printf("%s%f\n", "MIN: ", min);
         return compile;
     }
 
-    if(current_query == D)
+    //Gets MIN of averages users
+    else if(current_query == D)
     {
-
-        float minUsers = f[0].userCount;
+        float minUsers = 0.0;
+        minUsers = f[0].userCount;
         strcpy(compile->filename, f[0].filename);
         for(int i = 0; i < numfiles; i++)
         {
-            //printf("%s%f\n", "userCount: ", f[i].userCount);
             if(f[i].userCount < minUsers)
             {
                 minUsers = f[i].userCount;
@@ -266,13 +277,15 @@ static void* reduce(void* v){
                 strcpy(compile->filename, f[i].filename);
             }
         }
-        //compile->maxDuration = min;
         compile->minUsers = minUsers;
         compile->result = minUsers;
-        //printf("%s%f\n", "MIN: ", min);
         return compile;
-    }
-
-    
+    } 
+    else if(current_query == E)
+    {
+        strcpy(compile->filename, f[0].filename);
+        reduceCcodes(f,compile);
+        return compile;
+    }     
     return NULL;
 }

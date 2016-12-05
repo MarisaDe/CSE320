@@ -20,6 +20,8 @@ typedef struct mapStruct{
     float* avgUser;
     float userCount;
     char* ccode;
+    int countryUsers;
+    char** ccodeToFree;
     //double avgDuration;
     //double avgUser;
     //int countryCodes;
@@ -33,8 +35,9 @@ typedef struct reduceStruct{
     float minUsers;
     float minDuration;
     float maxDuration;
-    char ccode;
+    char* ccode;
     float result;
+    float freq;
 
 } reduceStruct;
 
@@ -51,7 +54,9 @@ float avgDuration(FILE* fp,  int duration[], int size);
 
 float countPerYear(FILE *fp, int year[], int size);
 
-int ccodes(FILE* fp);
+void ccodes(FILE* fp, char* ccode[],int size, mapStruct* f);
+
+void reduceCcodes(mapStruct* f, reduceStruct* compile);
 
 #endif /* LOTT2_H */
 
