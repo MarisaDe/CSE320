@@ -173,3 +173,95 @@ void reduceCcodes(mapStruct* f, reduceStruct* compile)
 	compile->freq = maxFreq;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+void partA(mapStruct* f, reduceStruct* compile)
+{
+   	float max = 0.0;
+    max = f[0].avgDur;
+    strcpy(compile->filename, f[0].filename);
+    for(int i = 0; i < numfiles; i++)
+    {
+
+        if(f[i].avgDur > max)
+        {
+            max = f[i].avgDur; 
+            strcpy(compile->filename, f[i].filename);      
+        }
+        if(f[i].avgDur == max && strcmp(f[i].filename, compile->filename) < 0)
+        {
+            max = f[i].avgDur; 
+            strcpy(compile->filename, f[i].filename);      
+        }
+    }
+    compile->maxDuration = max;
+    compile->result = max;
+    //return compile;
+  }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+void partB(mapStruct* f, reduceStruct* compile)
+{
+  	float min = 0.0;
+    min = f[0].avgDur;
+    strcpy(compile->filename, f[0].filename);
+    for(int i = 0; i < numfiles; i++)
+    {
+        if(f[i].avgDur < min)
+        {
+            min = f[i].avgDur;
+            strcpy(compile->filename, f[i].filename);
+        }
+        if(f[i].avgDur == min && strcmp(f[i].filename, compile->filename) < 0)
+        {
+            min = f[i].avgDur;
+            strcpy(compile->filename, f[i].filename);
+        }
+    }
+    compile->minDuration = min;
+    compile->result = min;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+void partC(mapStruct* f, reduceStruct* compile)
+{
+    float maxUsers = 0.0;
+    maxUsers = f[0].userCount;
+    strcpy(compile->filename, f[0].filename);
+    for(int i = 0; i < numfiles; i++)
+    {
+        if(f[i].userCount > maxUsers)
+        {
+            maxUsers = f[i].userCount;
+            strcpy(compile->filename, f[i].filename);
+        }
+        if(f[i].userCount == maxUsers && strcmp(f[i].filename, compile->filename) < 0)
+        {
+            maxUsers = f[i].userCount;
+            strcpy(compile->filename, f[i].filename);
+        }
+    }
+    compile->maxUsers = maxUsers;
+    compile->result = maxUsers;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+void partD(mapStruct* f, reduceStruct* compile)
+{
+    float minUsers = 0.0;
+    minUsers = f[0].userCount;
+    strcpy(compile->filename, f[0].filename);
+    for(int i = 0; i < numfiles; i++)
+    {
+        if(f[i].userCount < minUsers)
+        {
+            minUsers = f[i].userCount;
+            strcpy(compile->filename, f[i].filename);
+        }
+        if(f[i].userCount == minUsers && strcmp(f[i].filename, compile->filename) < 0)
+        {
+            minUsers = f[i].userCount;
+            strcpy(compile->filename, f[i].filename);
+        }
+    }
+    compile->minUsers = minUsers;
+    compile->result = minUsers;
+
+}
