@@ -24,6 +24,8 @@ typedef struct mapStruct{
     int countryUsers;
     char** ccodeToFree;
     int countFree;
+    int ccodeToFreeCount;
+    int arrayRange;
     //double avgDuration;
     //double avgUser;
     //int countryCodes;
@@ -40,6 +42,8 @@ typedef struct reduceStruct{
     char* ccode;
     float result;
     float freq;
+    char** ccodeToFree;
+    int ccodeToFreeCount;
 
 } reduceStruct;
 
@@ -52,6 +56,7 @@ typedef struct part2Struct{
     int workload;
     int start;
     int end; 
+    int range;
     char ** allFiles;
 
 } part2Struct;

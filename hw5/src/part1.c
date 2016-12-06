@@ -14,7 +14,7 @@ int part1(){
 
 ///////////////////////////////////////////////////////////////////////////
     //numfiles = nfiles(DATA_DIR);    //checks to see how many files are in the dir so we know how many threads to spawn.
-    numfiles = 500;
+    numfiles = 10;
     printf("%i\n",numfiles);          //test the file path
     pthread_t threadfile[numfiles];   //make a thread for each file
     mapStruct mapArray[numfiles];     //make a struct to store info about each file
@@ -84,7 +84,7 @@ int part1(){
     }
     return 0;
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Given the file name, it opens it and does an operation on it.
 static void* map(void* v){
     mapStruct* f = (mapStruct*)v;
@@ -138,12 +138,14 @@ static void* map(void* v){
     fclose(fp);
     free(line);
     f->ccodeToFree = ccode;
+    f->ccodeToFreeCount = i;
     //////////////////////////////////////////////////////////////////////// 
     
     //PERFORM SOME ANALYSIS ON THIS
     if(current_query == A || current_query == B)
     {
         f->avgDur = avgDuration(fp, duration, i);
+        printf("%s%f\n", "MAP: ", f->avgDur);
         f->userCount = 0.0;
         
     }
@@ -158,6 +160,7 @@ static void* map(void* v){
         ccodes(fp, ccode, i, f);
         f->userCount = 0.0;
         f->avgDur = 0.0;  
+        free(yearResults);
         return f;     
     }    
     else{

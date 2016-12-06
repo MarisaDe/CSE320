@@ -153,7 +153,6 @@ void reduceCcodes(mapStruct* f, reduceStruct* compile)
 	 	}
 		 
 	}
-
 	int maxFreq = 0;
 	compile->ccode = trackCodes[0];
 	for(int i = 0; i < 10; i++)
@@ -169,6 +168,7 @@ void reduceCcodes(mapStruct* f, reduceStruct* compile)
 			compile->ccode = trackCodes[i]; 	//Obtain country code.
         }
 	}
+	compile->ccodeToFree = f->ccodeToFree;
 	compile->result = maxFreq;
 	compile->freq = maxFreq;
 }
@@ -180,7 +180,7 @@ void partA(mapStruct* f, reduceStruct* compile)
     strcpy(compile->filename, f[0].filename);
     for(int i = 0; i < numfiles; i++)
     {
-
+    	printf("%s%f\n", "Duration PART A: ", f[i].avgDur);
         if(f[i].avgDur > max)
         {
             max = f[i].avgDur; 
@@ -194,7 +194,6 @@ void partA(mapStruct* f, reduceStruct* compile)
     }
     compile->maxDuration = max;
     compile->result = max;
-    //return compile;
   }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////

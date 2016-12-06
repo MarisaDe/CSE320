@@ -30,33 +30,74 @@ int part2(size_t nthreads) {
     printf("%i\n",numfiles);                                //test the file path
     mapStruct* results = malloc(sizeof(mapStruct)*numfiles);
     memset(results, 0, sizeof(&results));
+    // for(int i=0; i < nthreads; i++)
+    // {
+    //    results[i] = malloc(sizeof(mapStruct));
+    //    memset(results[i], 0, sizeof(mapStruct));
+    // }
+
     char ** allFiles = parseDir();                       //gathers all the files
     printf("%s",allFiles[0]);
     int start = 0;
     int end = workload-1;
-    //pthread_t threadfile[nthreads];   //make a thread for each file
-    //void* result;
+    int range = end-start;
+    pthread_t threadfile[nthreads];   //make a thread for each file
+    mapStruct* result;
+    part2Struct part2Array[numfiles];     //make a struct to store info about each file
     for(int i=0; i < nthreads; i++)                         //spawn the threads
     {
-           //printf("%i%i\n",start, end);
-           part2Struct* p = malloc(sizeof(part2Struct));
-           p->start = start;
-           //printf("%s%i\n","start: ", p->start);
-           p->end = end;
-           p->allFiles = allFiles;
-           iterateMap(p);
-          // pthread_create(&threadfile[i],NULL,iterateMap,&p); 
-          // pthread_join(threadfile[i], (void**)&result);
-    //     //memcpy(&results[n],result,sizeof(mapStruct));
-    //     //printf("%i%s%i\n", n, " UserCount: ", results[n].countryUsers);
-    //     //printf("%i%s%s\n", n ," Code: ", results[n].ccode);
-    //     //printf("%s%s\n","YEAR: ", result[n].year);
-           start+=workload;
-           end+=workload;
+       //printf("%i%i\n",start, end);
+       part2Array[i].start = start;
+       //printf("%s%i\n","start: ", p->start);
+       part2Array[i].end = end;
+       part2Array[i].range = range;
+       part2Array[i].allFiles = allFiles;
+       //result = iterateMap(p);                          //need a pointer that points to an array
+       pthread_create(&threadfile[i],NULL,iterateMap,&part2Array[i]); 
+       //memcpy(&results[0],result,sizeof(mapStruct)); 
+       //result = result + sizeof(mapStruct);    
+       //memcpy(&results[1],result,sizeof(mapStruct));         //a pointer that points to a double pointer
+       // memcpy(&results[i],result,sizeof(mapStruct));
+       // printf("%s%f\n","avgDur: ", results[0]->avgDur);
+        //printf("%s%f\n","avgDur: ", result[0]->avgDur);
+       //printf("%s%f\n","avgDur: ", results[0]->avgDur);
+       //printf("%s%f\n","avgDur: ", results[1]->avgDur);
+       //printf("%s%f\n","avgDur: ", results[2]->avgDur);
+       // for(int n=0; n< range; n++)                        //for each result, memcpy it.
+       // {
+       //   memcpy(results,result,sizeof(mapStruct*)*2);  
+       //   printf("%s%f\n","avgDur: ", results[n][n].avgDur);
+       // }
+//       memcpy(results[i],result,sizeof(mapStruct**));    //it returns pointers to be stored in an array pointer (**)
+//     pthread_create(&threadfile[i],NULL,iterateMap,&p); 
+//     //printf("%i%s%i\n", n, " UserCount: ", results[n].countryUsers);
+//     //printf("%i%s%s\n", n ," Code: ", results[n].ccode);
+//     //printf("%s%s\n","YEAR: ", result[n].year);
+       //free(p);
+       start+=workload;
+       end+=workload;
+       range = end-start;
+       
      }
-
+      int count = -1;
+      for(int i=0; i < nthreads; i++)
+      {
+        pthread_join(threadfile[i], (void**)&result);
+        printf("%s%f\n","avgDurInLoop: ", result[1].avgDur);
+        for(int n=0; n < workload; n++)
+        {
+            count++;
+            //memcpy(&results[count],result,sizeof(mapStruct));
+            results[count] = result[n]; 
+        }
+        //printf("%s%f\n","avgDurInLoop: ", results[0].avgDur);
+      }
     //allData->resultArray = results;
-    reduceStruct* rResults;
+    reduceStruct* rResults; 
+    //= malloc(sizeof(reduceStruct*));
+    //memset(&rResults,0,(sizeof(reduceStruct*)));
+
+    //initialize the variables.
     rResults = reduce(results);   
 
     if(current_query != E)
@@ -71,13 +112,16 @@ int part2(size_t nthreads) {
         "Part: %s\nQuery: %s\nResult: %.7g, %s\n",
         PART_STRINGS[current_part], QUERY_STRINGS[current_query], rResults->result, rResults->ccode);
     }
+    for(int i = 0; i < numfiles; i ++)
+    {
+        free(allFiles[i]);
+    }
     free(results); 
+    free(allFiles);
     free(rResults);   
-
-
-    //map(NULL);
     return 0;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Given the file name, it opens it and does an operation on it.
 static void* map(void* v){
@@ -110,7 +154,6 @@ static void* map(void* v){
     int transfer;
     struct tm * timeinfo;
     char buffer[512];
-
     while(fgets(line, 512, fp) != NULL)             //go through each line in the file
     {      
         char* time = strtok_r(line, ",", &saveptr); //parse for the first comma
@@ -138,6 +181,7 @@ static void* map(void* v){
     if(current_query == A || current_query == B)
     {
         f->avgDur = avgDuration(fp, duration, i);
+        printf("%s%f\n", "MAP: ", f->avgDur);
         f->userCount = 0.0;
         
     }
@@ -171,6 +215,7 @@ static void* map(void* v){
 
 static void* reduce(void* v){
     mapStruct* f = (mapStruct*)v;
+    //printf("%s%f", "REDUCE AVG: ", f[0].avgDur);
     //malloc(sizeof(mapStruct)*numfiles);
     reduceStruct* compile = malloc(sizeof(reduceStruct));
 
@@ -211,86 +256,26 @@ static void* reduce(void* v){
     return NULL;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////
-//Assumes the direntry is valid.
-//A thread will call this function and this will loop the map function workload times.
-// void* parseDir(void* f)
-// {
-//     printf("%s\n","I PARSED ");
-//     part2Struct* t = (part2Struct*) f;
-//     mapStruct* input = malloc(sizeof(mapStruct));
-//     //mapStruct* output = malloc(sizeof(mapStruct));
-//     mapStruct* mapArray[t->workload];              //keeps a mapStruct array of all the files the thread does.
-//     //printf("%s%i\n","AVGD: ", t->workload);
-//     int i = 0;
-//     //printf("%s%s\n","filename: ", t->directory->d_name);
-//     char filepath[512];
-//     while(t->direntry != NULL && i < t->workload)     //while files are in the directory
-//     {
-//         printf("%s%s\n","tdir: ",t->direntry->d_name);
-//         printf("%s%i\n","i: ",i);
 
-//         strcpy(filepath,DATA_DIR);
-//         strcat(filepath,"/");
-
-//         if(strcmp(t->direntry->d_name, ".") != 0 && strcmp(t->direntry->d_name, "..") != 0 )
-//         {
-//             strcpy(input->filename, t->direntry->d_name);
-//             strcat(filepath, t->direntry->d_name);
-//             strcpy(input->file, filepath); 
-//             //printf("%s%s\n","filename: ", t->direntry->d_name);
-//             //open the file to parse.
-//             mapStruct* output = map(input);                  //map returns a mapstruct (void*)!
-//             //memcpy(&output,(map((void*)input)),sizeof(mapStruct));
-//             mapArray[i] = output;                           //Put this mapStruct into a mapStruct array!
-//             printf("%s%f\n","AVGD: ", mapArray[i]->avgDur);  
-//             i++;
-//         }
-        
-//          printf("%s%i\n","dfdddfi: ",i);
-//          t->direntry = readdir(t->directory);            
-//          //printf("%s%i\n","dfdddfi: ",i);
-//     }
-//     printf("%s\n","end");
-//     free(input);
-//     mapStruct** arrayPointer = mapArray;
-//     return arrayPointer;
-
-// }
 ////////////////////////////////////////////////////////////////////////////////////////
 char** parseDir()
 {
     //printf("%s\n","I PARSED ");
-    DIR *directory;                //creates a directory pointer
-    char filepath[512];
-    directory = opendir(DATA_DIR); //open the directory for data.
-    char** fileList = malloc(sizeof(char*)*numfiles);
-    for (int i =0 ; i < numfiles; ++i)
-    {
-        fileList[i] = malloc(512 * sizeof(char));
-    }
-
-    //char* listptr;
+    DIR *directory;                                 //creates a directory pointer
+    directory = opendir(DATA_DIR);                  //open the directory for data.
+    char** fileList = (char**)malloc(sizeof(char*)*512);
+    memset(fileList,0,(sizeof(char*)*512));
     int i = 0;
 
-    if(directory)                  //if directory is valid
+    if(directory)                                   //if directory is valid
     {
         struct dirent* direntry = readdir(directory);
         while(direntry != NULL && i < numfiles)     //while files are in the directory
         {   
-            strcpy(filepath,DATA_DIR);
-            strcat(filepath,"/");
-
             if(strcmp(direntry->d_name, ".") != 0 && strcmp(direntry->d_name, "..") != 0 )
             {   
-               
-                strcat(filepath, direntry->d_name);
-                //strcpy(mapArray[i].file, filepath);         //get the file name so map know which file to open (no data)
-                fileList[i] = malloc(strlen(filepath));
-                strcpy(fileList[i], filepath);              //Fill the list with all the files in the directory
-                //printf("%s\n",fileList[i]);
-                //pthread_create(&threadfile[i],NULL,map,&mapArray[i]); 
-                //printf("%s\n",filepath);
+                fileList[i] = malloc(strlen(direntry->d_name)+1);
+                strcpy(fileList[i], direntry->d_name);                //Fill the list with all the files in the directory
                 i++;  
             }
 
@@ -302,15 +287,50 @@ char** parseDir()
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 void* iterateMap(void* p)
-{
-    printf("%s\n","I GOT HERE");
+{                                 
+    printf("%s\n","Thread Spawned!!!!!");
     part2Struct* info = (part2Struct*) p;
-    mapStruct* f = malloc(sizeof(mapStruct));
-    for(int i = info->start; i < info->end; i++)
+    int range = info->range;
+    range++;
+    //printf("%s%i\n", "RANGE: ", range);
+    //printf("%s%i\n", "start: ", info->start);
+    //printf("%s%i\n", "end: ", info->end);
+    mapStruct** mapArray = (mapStruct**) malloc(sizeof(mapStruct*)*range);  //create an array for the map struct to RETURN.
+    memset(mapArray,0,sizeof(mapStruct*)*range);
+
+
+    mapStruct *ret = malloc(sizeof(mapStruct*)*range);
+    if(!ret)
+        return NULL;
+
+    for (int i =0 ; i < range; i++)
     {
-        //f->file = (info->allFiles[i]);
-        printf("%s\n", info->allFiles[i]);
-        map(f);
+        mapArray[i] = (mapStruct*)malloc(sizeof(mapStruct));
+        memset(mapArray[i],0,(sizeof(mapStruct)));
     }
-    return NULL;
+
+    mapStruct* f = malloc(sizeof(mapStruct));
+    void* ppp;
+    memset(f,0,sizeof(mapStruct));
+    int arrCount = 0;
+    for(int i = info->start; i <= info->end; i++)
+    {
+        //printf("%s%i\n", "Count: ", i);
+        strcpy(f->file,DATA_DIR);
+        strcat(f->file,"/");
+
+        if(i < numfiles)
+        {   
+            strcat(f->file, info->allFiles[i]);        
+            strcpy(f->filename, info->allFiles[i]);
+            //printf("%s\n", f->file);
+            ppp = map(f);
+            memcpy(&ret[arrCount],ppp,sizeof(mapStruct));
+            //printf("%s%f\n", "iterateMap: ", ret[i].avgDur);
+            arrCount++;
+        }
+    }
+    //printf("%s\n", "BOUTA RETURN TO part2");
+    //free(f);  
+    return ret;
 } 
