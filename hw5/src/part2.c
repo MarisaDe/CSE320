@@ -54,25 +54,6 @@ int part2(size_t nthreads) {
        part2Array[i].allFiles = allFiles;
        //result = iterateMap(p);                          //need a pointer that points to an array
        pthread_create(&threadfile[i],NULL,iterateMap,&part2Array[i]); 
-       //memcpy(&results[0],result,sizeof(mapStruct)); 
-       //result = result + sizeof(mapStruct);    
-       //memcpy(&results[1],result,sizeof(mapStruct));         //a pointer that points to a double pointer
-       // memcpy(&results[i],result,sizeof(mapStruct));
-       // printf("%s%f\n","avgDur: ", results[0]->avgDur);
-        //printf("%s%f\n","avgDur: ", result[0]->avgDur);
-       //printf("%s%f\n","avgDur: ", results[0]->avgDur);
-       //printf("%s%f\n","avgDur: ", results[1]->avgDur);
-       //printf("%s%f\n","avgDur: ", results[2]->avgDur);
-       // for(int n=0; n< range; n++)                        //for each result, memcpy it.
-       // {
-       //   memcpy(results,result,sizeof(mapStruct*)*2);  
-       //   printf("%s%f\n","avgDur: ", results[n][n].avgDur);
-       // }
-//       memcpy(results[i],result,sizeof(mapStruct**));    //it returns pointers to be stored in an array pointer (**)
-//     pthread_create(&threadfile[i],NULL,iterateMap,&p); 
-//     //printf("%i%s%i\n", n, " UserCount: ", results[n].countryUsers);
-//     //printf("%i%s%s\n", n ," Code: ", results[n].ccode);
-//     //printf("%s%s\n","YEAR: ", result[n].year);
        //free(p);
        start+=workload;
        end+=workload;
@@ -83,7 +64,7 @@ int part2(size_t nthreads) {
       for(int i=0; i < nthreads; i++)
       {
         pthread_join(threadfile[i], (void**)&result);
-        printf("%s%f\n","avgDurInLoop: ", result[1].avgDur);
+        printf("%s%f\n","avgDurInLoop: ", result[0].avgDur);
         for(int n=0; n < workload; n++)
         {
             count++;
@@ -94,8 +75,6 @@ int part2(size_t nthreads) {
       }
     //allData->resultArray = results;
     reduceStruct* rResults; 
-    //= malloc(sizeof(reduceStruct*));
-    //memset(&rResults,0,(sizeof(reduceStruct*)));
 
     //initialize the variables.
     rResults = reduce(results);   
@@ -323,6 +302,7 @@ void* iterateMap(void* p)
         {   
             strcat(f->file, info->allFiles[i]);        
             strcpy(f->filename, info->allFiles[i]);
+            f->range = info->range;
             //printf("%s\n", f->file);
             ppp = map(f);
             memcpy(&ret[arrCount],ppp,sizeof(mapStruct));
@@ -330,7 +310,6 @@ void* iterateMap(void* p)
             arrCount++;
         }
     }
-    //printf("%s\n", "BOUTA RETURN TO part2");
     //free(f);  
     return ret;
 } 

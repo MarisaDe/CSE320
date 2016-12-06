@@ -26,6 +26,7 @@ typedef struct mapStruct{
     int countFree;
     int ccodeToFreeCount;
     int arrayRange;
+    int range;               //for part 2. (range is #of files for each thread)
     //double avgDuration;
     //double avgUser;
     //int countryCodes;
