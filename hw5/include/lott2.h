@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <dirent.h>
 
 
 extern int numfiles;
@@ -47,6 +48,15 @@ typedef struct mapResults{
 } mapResults;
 
 
+typedef struct part2Struct{
+    int workload;
+    int start;
+    int end; 
+    char ** allFiles;
+
+} part2Struct;
+
+
 //Functions
 
 int nfiles(char* dir);
@@ -66,7 +76,6 @@ void partB(mapStruct* f, reduceStruct* compile);
 void partC(mapStruct* f, reduceStruct* compile);
 
 void partD(mapStruct* f, reduceStruct* compile);
-
 
 
 #endif /* LOTT2_H */

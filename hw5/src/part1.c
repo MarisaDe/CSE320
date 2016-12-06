@@ -13,7 +13,7 @@ int numfiles;
 int part1(){
 
 ///////////////////////////////////////////////////////////////////////////
-    //numfiles = nfiles(DATA_DIR);      //checks to see how many files are in the dir so we know how many threads to spawn.
+    //numfiles = nfiles(DATA_DIR);    //checks to see how many files are in the dir so we know how many threads to spawn.
     numfiles = 500;
     printf("%i\n",numfiles);          //test the file path
     pthread_t threadfile[numfiles];   //make a thread for each file
@@ -177,10 +177,7 @@ static void* map(void* v){
 
 static void* reduce(void* v){
     mapStruct* f = (mapStruct*)v;
-    //malloc(sizeof(mapStruct)*numfiles);
     reduceStruct* compile = malloc(sizeof(reduceStruct));
-
-
     //Do operation based on query. This get MAX of avgs.
     if(current_query == A)
     {
