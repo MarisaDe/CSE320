@@ -22,7 +22,12 @@ int part2(size_t nthreads) {
     {
         workload = 1 + ((numfiles - 1) / nthreads);         //Each thread will do workload files 
         printf("%s%i\n","Workload:", workload);
-    }   
+    } 
+    if(nthreads > numfiles)
+    {
+        nthreads = numfiles;
+        workload = 1;
+    }  
     else 
     {
         return -1;
@@ -48,7 +53,7 @@ int part2(size_t nthreads) {
     mapStruct* result;
     part2Struct part2Array[numfiles];
 
-    //spawn the threads
+    //spawns n number of threads 
     for(int i=0; i < nthreads; i++)                         
     {
        part2Array[i].start = start;
@@ -76,6 +81,7 @@ int part2(size_t nthreads) {
     reduceStruct* rResults; 
     rResults = reduce(results);   
 
+    //print results
     if(current_query != E)
     {
         printf(
@@ -101,15 +107,15 @@ int part2(size_t nthreads) {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//Given the file name, it opens it and does an operation on it.
+//Given the file name, it opens it and does an operation on it
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void* map(void* v){
     mapStruct* f = (mapStruct*)v;
-    FILE* fp;                                           //creates a file pointer
+    FILE* fp;                                       //creates a file pointer
     fp = fopen(f->file, "r");
 
     //Parse through the file and store it in one struct for any query to access.
-
+    //initalize needed pointers/variables
     int lines = 0;
     char* line;
     line = malloc(sizeof(char)*512);
@@ -126,7 +132,7 @@ static void* map(void* v){
     fp = fopen(f->file, "r");
     int duration[lines];                            //array of all the durations in the file
     char* year;                                     //array of all the years in the file
-    char* ccode[lines];                           //array of all the country codes in the file
+    char* ccode[lines];                             //array of all the country codes in the file
     int i = 0;
     int* yearResults = malloc(sizeof(int)*lines);
     time_t rawtime;
@@ -147,7 +153,7 @@ static void* map(void* v){
         token = strtok_r(0, ",", &saveptr);         //gets the duration
         duration[i] = strtol(token, &ptr, 10);      //makes duration a double
         token = strtok_r(0, ",", &saveptr);         //gets country code.
-        ccode[i] = malloc(strlen(token) + 1);
+        ccode[i] = malloc(strlen(token) + 1);       //store the country code in the index
         strcpy(ccode[i], token);
         i++;
     }
@@ -191,11 +197,11 @@ static void* map(void* v){
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// reduce function should only be called 1 time
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 static void* reduce(void* v){
     mapStruct* f = (mapStruct*)v;
     //printf("%s%f", "REDUCE AVG: ", f[0].avgDur);
-    //malloc(sizeof(mapStruct)*numfiles);
     reduceStruct* compile = malloc(sizeof(reduceStruct));
 
 
@@ -213,19 +219,20 @@ static void* reduce(void* v){
         return compile;
      }
 
-    //Gets MAX of averages users
+    //Gets MAX of users
     else if(current_query == C)
     {
         partC(f, compile);
         return compile;
     }
 
-    //Gets MIN of averages users
+    //Gets MIN of users
     else if(current_query == D)
     {
         partD(f, compile);
         return compile;
     } 
+    //Max freq of users from a ccode
     else if(current_query == E)
     {
         strcpy(compile->filename, f[0].filename);
@@ -236,6 +243,8 @@ static void* reduce(void* v){
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////
+//Parses all the files in the directory and returns a char pointer to it
 ////////////////////////////////////////////////////////////////////////////////////////
 char** parseDir()
 {
@@ -258,22 +267,24 @@ char** parseDir()
                 i++;  
             }
 
-            direntry = readdir(directory); //read the next file in the path
+            direntry = readdir(directory);          //read the next file in the path
         }
-        closedir(directory); //close the directory stream
+        closedir(directory);                        //close the directory stream
     }
     return fileList;
 }
-////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+//Each thread calls this to go through the map function "workload" times. (the range from end-start)
+//////////////////////////////////////////////////////////////////////////////////////////////
 void* iterateMap(void* p)
 {                                 
     part2Struct* info = (part2Struct*) p;
     int range = info->range;
     range++;
-    mapStruct** mapArray = (mapStruct**) malloc(sizeof(mapStruct*)*range);  //create an array for the map struct to RETURN.
+    mapStruct** mapArray = (mapStruct**) malloc(sizeof(mapStruct*)*range);  
     memset(mapArray,0,sizeof(mapStruct*)*range);
 
-    mapStruct *ret = malloc(sizeof(mapStruct*)*range);
+    mapStruct *ret = malloc(sizeof(mapStruct*)*range);               //create an array of the mapStruct to return
     if(!ret)
         return NULL;
 
@@ -287,12 +298,12 @@ void* iterateMap(void* p)
     void* ppp;
     memset(f,0,sizeof(mapStruct));
     int arrCount = 0;
-    for(int i = info->start; i <= info->end; i++)
+    for(int i = info->start; i <= info->end; i++)                   //for the range give, analyze the file using map
     {
-        strcpy(f->file,DATA_DIR);
+        strcpy(f->file,DATA_DIR);                                   //append data/ for the filename to open later.
         strcat(f->file,"/");
 
-        if(i < numfiles)
+        if(i < numfiles)                                            //only enter map if the index is less than # of files
         {   
             strcat(f->file, info->allFiles[i]);        
             strcpy(f->filename, info->allFiles[i]);
@@ -302,7 +313,7 @@ void* iterateMap(void* p)
             arrCount++;
         }
     }
-    ret->range = arrCount;
-    free(f);  
+    ret->range = arrCount;  //keep the count so we can move the info properly later
+    free(f);                //free up space that's not needed anymore
     return ret;
 } 

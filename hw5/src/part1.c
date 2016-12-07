@@ -13,24 +13,24 @@ int numfiles;
 int part1(){
 
 ///////////////////////////////////////////////////////////////////////////
-    //numfiles = nfiles(DATA_DIR);    //checks to see how many files are in the dir so we know how many threads to spawn.
+    //numfiles = nfiles(DATA_DIR);                              //checks to see how many files are in the dir
     numfiles = 10;
-    printf("%i\n",numfiles);          //test the file path
-    pthread_t threadfile[numfiles];   //make a thread for each file
-    mapStruct mapArray[numfiles];     //make a struct to store info about each file
+    printf("%i\n",numfiles);                                    //test the file path
+    pthread_t threadfile[numfiles];                             //make a thread for each file
+    mapStruct mapArray[numfiles];                               //make a struct to store info about each file
     mapStruct* results = malloc(sizeof(mapStruct)*numfiles);
     memset(results, 0, sizeof(&results));
     int i = 0;
-    if(numfiles > 0)
+    if(numfiles > 0)                                            //only proceed if there is at least 1 file
     {
-        DIR *directory;                //creates a directory pointer
+        DIR *directory;                                         //creates a directory pointer
         char filepath[512];
-        directory = opendir(DATA_DIR); //open the directory for data.
+        directory = opendir(DATA_DIR);                          //open the directory for data.
 
-        if(directory)                  //if directory is valid
+        if(directory)                                           //if directory is valid
         {
             struct dirent* direntry = readdir(directory);
-            while(direntry != NULL && i < numfiles)     //while files are in the directory
+            while(direntry != NULL && i < numfiles)             //while files are in the directory
             {   
                 strcpy(filepath,DATA_DIR);
                 strcat(filepath,"/");
@@ -39,33 +39,25 @@ int part1(){
                 {   
                     strcpy(mapArray[i].filename, direntry->d_name);
                     strcat(filepath, direntry->d_name);
-                    strcpy(mapArray[i].file, filepath);         //get the file name so map know which file to open
+                    strcpy(mapArray[i].file, filepath);         //get the file name so map knows which file to open
                     mapArray[i].numFiles = numfiles; 
-                    //printf("%s\n",filepath);
-                    pthread_create(&threadfile[i],NULL,map,&mapArray[i]); 
-                    //printf("%s\n",filepath);
+                    pthread_create(&threadfile[i],NULL,map,&mapArray[i]); //create the thread
                     i++;  
                 }
 
-                direntry = readdir(directory); //read the next file in the path
+                direntry = readdir(directory);                  //read the next file in the path
             }
-            closedir(directory); //close the directory stream
+            closedir(directory);                                //close the directory stream
             mapStruct* result;
             for(int n=0; n < numfiles; n++)
             {
-                pthread_join(threadfile[n], (void**)&result);
-                memcpy(&results[n],result,sizeof(mapStruct));
-                //printf("%i%s%i\n", n, " CountryUserCount: ", results[n].countryUsers);
-                //printf("%i%s%s\n", n ," Code: ", results[n].ccode);
-                //printf("%s%s\n","YEAR: ", results[n].year);
-                //printf("%s%f\n","User Count: ", results[n].userCount);
-                //printf("%s%f\n","Avg Dur: ", results[n].avgDur);
+                pthread_join(threadfile[n], (void**)&result);   //get results from all the threads
+                memcpy(&results[n],result,sizeof(mapStruct));   //copy results to the results pointer
             }
-
-            //allData->resultArray = results;
             reduceStruct* rResults;
             rResults = reduce(results);   
 
+            //print results
             if(current_query != E)
             {
                 printf(
@@ -84,8 +76,9 @@ int part1(){
     }
     return 0;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Given the file name, it opens it and does an operation on it.
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Given the file name, it opens it and does an operation on it
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void* map(void* v){
     mapStruct* f = (mapStruct*)v;
     FILE* fp;                                       //creates a file pointer
@@ -177,7 +170,8 @@ static void* map(void* v){
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// reduce function should only be called 1 time
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 static void* reduce(void* v){
     mapStruct* f = (mapStruct*)v;
     reduceStruct* compile = malloc(sizeof(reduceStruct));
@@ -195,19 +189,20 @@ static void* reduce(void* v){
         return compile;
      }
 
-    //Gets MAX of averages users
+    //Gets MAX of users
     else if(current_query == C)
     {
         partC(f,compile);
         return compile;
     }
 
-    //Gets MIN of averages users
+    //Gets MIN of users
     else if(current_query == D)
     {
         partD(f,compile);
         return compile;
     } 
+    //Max freq of users from a ccode
     else if(current_query == E)
     {
         strcpy(compile->filename, f[0].filename);
