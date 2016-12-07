@@ -1,3 +1,5 @@
+
+
 #include "lott.h"
 #include <stdio.h>
 #include <dirent.h>
@@ -18,12 +20,12 @@ int part2(size_t nthreads) {
     //numfiles = nfiles(DATA_DIR);                          //checks to see how many files are in the dir so we know how many threads to spawn.
     numfiles = 10;
     int workload = 0;
-    if(nthreads != 0) 
+    if(nthreads != 0 && nthreads <= numfiles) 
     {
         workload = 1 + ((numfiles - 1) / nthreads);         //Each thread will do workload files 
-        printf("%s%i\n","Workload:", workload);
+        //printf("%s%i\n","Workload:", workload);
     } 
-    if(nthreads > numfiles)
+    else if(nthreads > numfiles)
     {
         nthreads = numfiles;
         workload = 1;
@@ -32,7 +34,7 @@ int part2(size_t nthreads) {
     {
         return -1;
     }                                  
-    printf("%i\n",numfiles);
+    //printf("%i\n",numfiles);
 
     //declare variables
     mapStruct* results = malloc(sizeof(mapStruct)*numfiles);
@@ -45,13 +47,13 @@ int part2(size_t nthreads) {
 
     memset(results, 0, sizeof(&results));
     char ** allFiles = parseDir();                          //gathers all the files
-    printf("%s",allFiles[0]);   
+    //printf("%s",allFiles[0]);   
     int start = 0;
     int end = workload-1;
     int range = end-start;
     pthread_t threadfile[nthreads];                         //make a thread for each file
     mapStruct* result;
-    part2Struct part2Array[numfiles];
+    part2Struct part2Array[nthreads];
 
     //spawns n number of threads 
     for(int i=0; i < nthreads; i++)                         
@@ -279,17 +281,25 @@ char** parseDir()
 void* iterateMap(void* p)
 {                                 
     part2Struct* info = (part2Struct*) p;
-    int range = info->range;
-    range++;
+    //int range = info->range;
+    //range++;
+    int range = 0;
+    for(int i = info->start; i <= info->end; i++)                   //for the range give, analyze the file using map
+    {
+        if(i < numfiles)                                            //only enter map if the index is less than # of files
+        {
+            range++;
+        }
+    }
     mapStruct** mapArray = (mapStruct**) malloc(sizeof(mapStruct*)*range);  
-    memset(mapArray,0,sizeof(mapStruct*)*range);
+    //memset(mapArray,0,sizeof(mapStruct*)*range);
 
     mapStruct *ret = malloc(sizeof(mapStruct*)*range);               //create an array of the mapStruct to return
-    if(!ret)
-        return NULL;
+
 
     for (int i =0 ; i < range; i++)
-    {
+    {   
+
         mapArray[i] = (mapStruct*)malloc(sizeof(mapStruct));
         memset(mapArray[i],0,(sizeof(mapStruct)));
     }
@@ -317,3 +327,4 @@ void* iterateMap(void* p)
     free(f);                //free up space that's not needed anymore
     return ret;
 } 
+
