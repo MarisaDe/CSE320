@@ -76,14 +76,6 @@ int part1(){
                 printf(
                 "Part: %s\nQuery: %s\nResult: %.7g, %s\n",
                 PART_STRINGS[current_part], QUERY_STRINGS[current_query], rResults->result, rResults->ccode);
-                
-                // for(int i = 0; i < 5; i++)
-                // {
-                //         for(int n=0; n< 100000; n++)
-                //         {
-                //             free(results[i].ccodeToFree[n]);        //free each element in each mapStruct
-                //         }
-                // }
             }
             free(results); 
             free(rResults);   
@@ -142,7 +134,6 @@ static void* map(void* v){
         token[2] = 0;
         ccode[i] = malloc(strlen(token)+1);       //store the country code in the index
         strcpy(ccode[i], token);
-        //strcat(ccode[i], "\0");
         //printf("!!%s!!\n", ccode[i]);
         i++;
     }
