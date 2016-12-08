@@ -17,14 +17,14 @@ int part2(size_t nthreads) {
 
 
     ///////////////////////////////////////////////////////////////////////////
-    //numfiles = nfiles(DATA_DIR);                          //checks to see how many files are in the dir so we know how many threads to spawn.
-    numfiles = 5;
+    numfiles = nfiles(DATA_DIR);                          //checks to see how many files are in the dir so we know how many threads to spawn.
+    //numfiles = 500;
     int workload = 0;
     if(nthreads != 0 && nthreads <= numfiles) 
     {
         workload = 1 + ((numfiles - 1) / nthreads);         //Each thread will do workload files 
     } 
-    else if(nthreads > numfiles)                            //If user is idiot and has more threads than files, do as if 1 thread per file.
+    else if(nthreads > numfiles)                            //If user has more threads than files, do as if 1 thread per file.
     {
         nthreads = numfiles;
         workload = 1;

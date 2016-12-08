@@ -122,10 +122,6 @@ void ccodes(FILE *fp, char* ccode[],int size, mapStruct* f)
         }
 
 	}
-	// for(int i = 0; i < size; i++)
-	// {
-	// 	free(ccode[i]);
-	// }
 	f->countryUsers = maxFreq;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +182,7 @@ void partA(mapStruct* f, reduceStruct* compile)
     strcpy(compile->filename, f[0].filename);
     for(int i = 0; i < numfiles; i++)
     {
-    	printf("%s%f", "Duration PART A: ", f[i].avgDur);
+    	//printf("%s%f", "Duration PART A: ", f[i].avgDur);
         if(f[i].avgDur > max)
         {
             max = f[i].avgDur; 
@@ -270,27 +266,3 @@ void partD(mapStruct* f, reduceStruct* compile)
     compile->result = minUsers;
 
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Assumes the direntry is valid.
-//A thread will call this function and this will loop the map function workload times.
-// void* parseDir(void* f)
-// {
-// 	part2Struct* t = (part2Struct*) f;
-// 	mapStruct input;
-// 	//mapStruct* output = malloc(sizeof(mapStruct));
-// 	mapStruct* mapArray[t->workload];			   //keeps a mapStruct array of all the files the thread does.
-// 	int i = 0;
-// 	while(t->direntry != NULL && i < t->workload)     //while files are in the directory
-// 	{
-//         strcpy(input.filename, t->direntry->d_name);
-// 		//open the file to parse.
-// 		mapStruct* output = map((void*)input);					//map returns a mapstruct!
-// 		//memcpy(&output,(map((void*)input)),sizeof(mapStruct));
-// 		mapArray[i]	= output;							//Put this mapStruct into a mapStruct array!
-// 		t->direntry = readdir(t->directory); 			//read the next file in the path
-// 		i++;		
-// 	}
-// 	mapStruct** arrayPointer = mapArray;
-// 	return arrayPointer;
-
-// }

@@ -14,8 +14,8 @@ int numfiles;
 int part1(){
 
 ///////////////////////////////////////////////////////////////////////////
-    //numfiles = nfiles(DATA_DIR);                              //checks to see how many files are in the dir
-    numfiles = 5;
+    numfiles = nfiles(DATA_DIR);                              //checks to see how many files are in the dir
+    //numfiles = 5;
     //printf("%i\n",numfiles);                                  //test the file path
     pthread_t threadfile[numfiles];                             //make a thread for each file
     mapStruct mapArray[numfiles];                               //make a struct to store info about each file
@@ -132,12 +132,10 @@ static void* map(void* v){
         duration[i] = strtol(token, &ptr, 10);      //makes duration a double
         token = strtok_r(0, ",", &saveptr);         //gets country code.
         token[2] = 0;
-        ccode[i] = malloc(strlen(token)+1);       //store the country code in the index
+        ccode[i] = malloc(strlen(token)+1);         //store the country code in the index
         strcpy(ccode[i], token);
-        //printf("!!%s!!\n", ccode[i]);
         i++;
     }
-    //printf("%s\n", ccode[0]);
     fclose(fp);
     free(line);
     f->ccodeToFreeCount = i;
@@ -147,7 +145,6 @@ static void* map(void* v){
     if(current_query == A || current_query == B)
     {
         f->avgDur = avgDuration(fp, duration, i);
-        printf("%s%f\n", "MAP: ", f->avgDur);
         f->userCount = 0.0;
         
     }
@@ -160,7 +157,6 @@ static void* map(void* v){
     else if(current_query == E)
     {
         f->ccodeToFree = ccode;
-        printf("!!%s\n", f->ccodeToFree[99999]);
         f->ccodeToFreeCount = i;
         ccodes(fp, f->ccodeToFree,i, f);
         f->userCount = 0.0;
