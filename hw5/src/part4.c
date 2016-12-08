@@ -10,12 +10,14 @@ static void* reduce(void*);
 char** parseDir4();
 void* iterateMap4(void*);
 
+pthread_t* threadfile;
+
 int part4(size_t nthreads){
     ///////////////////////////////////////////////////////////////////////////
     // NOT MUCH CODE WAS EDITED HERE.
     ///////////////////////////////////////////////////////////////////////////
-    numfiles = nfiles(DATA_DIR);                          //checks to see how many files are in the dir so we know how many threads to spawn.
-    //numfiles = 5;
+    //numfiles = nfiles(DATA_DIR);                          //checks to see how many files are in the dir so we know how many threads to spawn.
+    numfiles = 5;
     int workload = 0;
     if(nthreads != 0 && nthreads <= numfiles) 
     {
@@ -39,7 +41,8 @@ int part4(size_t nthreads){
     int start = 0;
     int end = workload-1;
     int range = end-start;
-    pthread_t threadfile[nthreads];                         //make a thread for each file
+    //pthread_t threadfile[nthreads];                         //make a thread for each file
+    pthread_t* threadfile = malloc(sizeof(mapStruct)*numfiles);
     mapStruct* result;
     part2Struct part2Array[nthreads];
     char thread_name[16];
@@ -100,7 +103,8 @@ int part4(size_t nthreads){
     }  
     free(results); 
     free(allFiles);
-    free(rResults);   
+    free(rResults); 
+    free(threadfile);  
     return 0;
 }
 
