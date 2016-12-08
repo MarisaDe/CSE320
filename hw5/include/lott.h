@@ -1,6 +1,10 @@
 #ifndef LOTT_H
 #define LOTT_H
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include "lott2.h"
 #include <pthread.h>
 #include <stdio.h>

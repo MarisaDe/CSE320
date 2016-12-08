@@ -20,16 +20,13 @@ typedef struct mapStruct{
     char* year;
     float* avgUser;
     float userCount;
-    char* ccode;
+    char ccode[3];
     int countryUsers;
     char** ccodeToFree;
     int countFree;
     int ccodeToFreeCount;
     int arrayRange;
     int range;               //for part 2. (range is #of files for each thread)
-    //double avgDuration;
-    //double avgUser;
-    //int countryCodes;
 
 } mapStruct;
 
@@ -43,7 +40,7 @@ typedef struct reduceStruct{
     char* ccode;
     float result;
     float freq;
-    char** ccodeToFree;
+    //char** ccodeToFree;
     int ccodeToFreeCount;
 
 } reduceStruct;

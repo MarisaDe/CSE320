@@ -109,17 +109,23 @@ void ccodes(FILE *fp, char* ccode[],int size, mapStruct* f)
 		if(maxFreq < trackFreq[i])
 		{
 			maxFreq = trackFreq[i];		//obtain the highest freq
-			f->ccode = trackCodes[i]; 	//Obtain country code.
+			//f->ccode = trackCodes[i]; 	//Obtain country code.
+			strcpy(f->ccode, trackCodes[i]);
 
 		}
 		else if(maxFreq == trackFreq[i] && strcmp(trackCodes[i], f->ccode) < 0)
         {
 			maxFreq = trackFreq[i];		//obtain the highest freq
-			f->ccode = trackCodes[i]; 	//Obtain country code.
+			//f->ccode = trackCodes[i]; 	//Obtain country code.
+			strcpy(f->ccode, trackCodes[i]);
 
         }
 
 	}
+	// for(int i = 0; i < size; i++)
+	// {
+	// 	free(ccode[i]);
+	// }
 	f->countryUsers = maxFreq;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +174,7 @@ void reduceCcodes(mapStruct* f, reduceStruct* compile)
 			compile->ccode = trackCodes[i]; 	//Obtain country code.
         }
 	}
-	compile->ccodeToFree = f->ccodeToFree;
+	//compile->ccodeToFree = f->ccodeToFree;
 	compile->result = maxFreq;
 	compile->freq = maxFreq;
 }
@@ -180,7 +186,7 @@ void partA(mapStruct* f, reduceStruct* compile)
     strcpy(compile->filename, f[0].filename);
     for(int i = 0; i < numfiles; i++)
     {
-    	printf("%s%f\n", "Duration PART A: ", f[i].avgDur);
+    	printf("%s%f", "Duration PART A: ", f[i].avgDur);
         if(f[i].avgDur > max)
         {
             max = f[i].avgDur; 

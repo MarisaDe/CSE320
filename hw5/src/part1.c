@@ -1,4 +1,5 @@
-#include "lott.h"
+ #define _GNU_SOURCE
+ #include "lott.h"
 #include <stdio.h>
 #include <dirent.h>
 #include <pthread.h>
@@ -14,13 +15,14 @@ int part1(){
 
 ///////////////////////////////////////////////////////////////////////////
     //numfiles = nfiles(DATA_DIR);                              //checks to see how many files are in the dir
-    numfiles = 10;
-    printf("%i\n",numfiles);                                    //test the file path
+    numfiles = 5;
+    //printf("%i\n",numfiles);                                  //test the file path
     pthread_t threadfile[numfiles];                             //make a thread for each file
     mapStruct mapArray[numfiles];                               //make a struct to store info about each file
     mapStruct* results = malloc(sizeof(mapStruct)*numfiles);
     memset(results, 0, sizeof(&results));
     int i = 0;
+    //char thread_name[16];
     if(numfiles > 0)                                            //only proceed if there is at least 1 file
     {
         DIR *directory;                                         //creates a directory pointer
@@ -42,6 +44,11 @@ int part1(){
                     strcpy(mapArray[i].file, filepath);         //get the file name so map knows which file to open
                     mapArray[i].numFiles = numfiles; 
                     pthread_create(&threadfile[i],NULL,map,&mapArray[i]); //create the thread
+                    char buffer[512];
+                    sprintf(buffer, "map %d", i);
+                    pthread_setname_np(threadfile[i], buffer); //Name ze thread
+                    //pthread_getname_np(threadfile[i], thread_name, sizeof(thread_name));
+                    //printf("%s\n", thread_name);
                     i++;  
                 }
 
@@ -69,6 +76,14 @@ int part1(){
                 printf(
                 "Part: %s\nQuery: %s\nResult: %.7g, %s\n",
                 PART_STRINGS[current_part], QUERY_STRINGS[current_query], rResults->result, rResults->ccode);
+                
+                // for(int i = 0; i < 5; i++)
+                // {
+                //         for(int n=0; n< 100000; n++)
+                //         {
+                //             free(results[i].ccodeToFree[n]);        //free each element in each mapStruct
+                //         }
+                // }
             }
             free(results); 
             free(rResults);   
@@ -124,13 +139,16 @@ static void* map(void* v){
         token = strtok_r(0, ",", &saveptr);         //gets the duration
         duration[i] = strtol(token, &ptr, 10);      //makes duration a double
         token = strtok_r(0, ",", &saveptr);         //gets country code.
-        ccode[i] = malloc(strlen(token) + 1);
+        token[2] = 0;
+        ccode[i] = malloc(strlen(token)+1);       //store the country code in the index
         strcpy(ccode[i], token);
+        //strcat(ccode[i], "\0");
+        //printf("!!%s!!\n", ccode[i]);
         i++;
     }
+    //printf("%s\n", ccode[0]);
     fclose(fp);
     free(line);
-    f->ccodeToFree = ccode;
     f->ccodeToFreeCount = i;
     //////////////////////////////////////////////////////////////////////// 
     
@@ -150,11 +168,12 @@ static void* map(void* v){
     }
     else if(current_query == E)
     {
-        ccodes(fp, ccode, i, f);
+        f->ccodeToFree = ccode;
+        printf("!!%s\n", f->ccodeToFree[99999]);
+        f->ccodeToFreeCount = i;
+        ccodes(fp, f->ccodeToFree,i, f);
         f->userCount = 0.0;
-        f->avgDur = 0.0;  
-        free(yearResults);
-        return f;     
+        f->avgDur = 0.0;       
     }    
     else{
         return NULL;
